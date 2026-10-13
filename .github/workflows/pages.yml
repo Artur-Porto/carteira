@@ -1,0 +1,32 @@
+name: pages
+
+# Milestone 0 publishes only the iPhone probe. Milestone 1 replaces this with the app build.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['iphone-probe/**', '.github/workflows/pages.yml']
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: iphone-probe
+      - id: deployment
+        uses: actions/deploy-pages@v4

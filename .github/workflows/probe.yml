@@ -1,0 +1,32 @@
+name: probe-sources
+
+# Milestone 0: checks every public market-data source from a GitHub runner.
+on:
+  workflow_dispatch:
+  push:
+    paths: ['pipeline/**', '.github/workflows/probe.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: pipeline
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: pipeline/package-lock.json
+      - run: npm ci
+      - run: node probe.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: probe-report
+          path: pipeline/out/

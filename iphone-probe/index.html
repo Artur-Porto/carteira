@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self'; img-src 'self' data: blob:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#0f6e56">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Teste Carteira">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="icon" href="icon-192.png">
+  <link rel="stylesheet" href="style.css">
+  <title>Teste Carteira</title>
+</head>
+<body>
+  <header>
+    <h1>Teste do iPhone · Marco 0</h1>
+    <p class="muted">Só dados fictícios. Nada sai do aparelho, exceto o arquivo que você exportar.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Como testar</h2>
+      <ol>
+        <li>No Safari, toque em Compartilhar → <b>Adicionar à Tela de Início</b>.</li>
+        <li>Abra pelo ícone. Toque em <b>Rodar testes</b>.</li>
+        <li>Teste exportar e importar o arquivo abaixo.</li>
+        <li>Ative o <b>modo avião</b>, feche o app (deslize para cima) e abra de novo pelo ícone.</li>
+        <li>Toque em <b>Copiar resultado</b> e cole na conversa.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Testes automáticos</h2>
+      <button id="run" type="button">Rodar testes</button>
+      <ul id="results" class="results" aria-live="polite"></ul>
+    </section>
+
+    <section>
+      <h2>Backup cifrado fictício</h2>
+      <p class="muted">Senha de teste: <code>teste-marco-0</code>. O conteúdo é uma carteira inventada.</p>
+      <button id="export-share" type="button">Exportar pelo menu Compartilhar</button>
+      <button id="export-download" type="button">Exportar por download</button>
+      <label class="file">
+        <span>Importar arquivo .carteira</span>
+        <input id="import-backup" type="file">
+      </label>
+      <label class="file">
+        <span>Importar planilha qualquer (.csv, .xlsx)</span>
+        <input id="import-sheet" type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+      </label>
+      <ul id="file-results" class="results" aria-live="polite"></ul>
+    </section>
+
+    <section>
+      <h2>Aberturas registradas</h2>
+      <p class="muted">Cada abertura grava uma linha no IndexedDB. Uma linha com <b>offline</b> prova que o app abriu sem rede.</p>
+      <ul id="launches" class="launches"></ul>
+    </section>
+
+    <section>
+      <button id="copy" type="button" class="primary">Copiar resultado</button>
+      <button id="reset" type="button" class="danger">Apagar dados deste teste</button>
+      <pre id="report" hidden></pre>
+    </section>
+  </main>
+  <script src="app.js" type="module"></script>
+</body>
+</html>

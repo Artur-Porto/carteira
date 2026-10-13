@@ -1,0 +1,64 @@
+:root {
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --text: #1a1d1b;
+  --muted: #5b625e;
+  --border: #d9ddd9;
+  --accent: #0f6e56;
+  --accent-text: #ffffff;
+  --ok: #17663a;
+  --fail: #a32020;
+  --warn: #8a5a00;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101211;
+    --surface: #1a1d1b;
+    --text: #eef1ee;
+    --muted: #a3aaa6;
+    --border: #2f3431;
+    --accent: #3fb68f;
+    --accent-text: #0b1a14;
+    --ok: #5fd08f;
+    --fail: #ff8a80;
+    --warn: #f0c060;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101211; --surface: #1a1d1b; --text: #eef1ee; --muted: #a3aaa6; --border: #2f3431;
+  --accent: #3fb68f; --accent-text: #0b1a14; --ok: #5fd08f; --fail: #ff8a80; --warn: #f0c060;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+header, main { max-width: 640px; margin: 0 auto; }
+h1 { font-size: 1.35rem; margin: 0 0 4px; }
+h2 { font-size: 1.05rem; margin: 0 0 10px; }
+.muted { color: var(--muted); font-size: 0.92rem; margin: 0 0 12px; }
+section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin: 14px 0; }
+ol { padding-left: 1.2em; margin: 0; }
+button, .file {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; min-height: 48px; margin: 8px 0; padding: 10px 14px;
+  border-radius: 12px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); font: inherit; font-weight: 600;
+  cursor: pointer;
+}
+button.primary, #run { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+button.danger { color: var(--fail); }
+.file { position: relative; overflow: hidden; }
+.file input { position: absolute; inset: 0; opacity: 0; font-size: 100px; cursor: pointer; }
+.results, .launches { list-style: none; padding: 0; margin: 8px 0 0; }
+.results li, .launches li { padding: 8px 0; border-top: 1px solid var(--border); font-size: 0.95rem; overflow-wrap: anywhere; }
+.tag { display: inline-block; min-width: 4.6em; font-weight: 700; }
+.tag.ok { color: var(--ok); }
+.tag.fail { color: var(--fail); }
+.tag.info, .tag.manual { color: var(--warn); }
+code { font-size: 0.9em; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.8rem; }

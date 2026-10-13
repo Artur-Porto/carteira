@@ -1,0 +1,23 @@
+# Dependencies and build output
+node_modules/
+dist/
+pipeline/out/
+
+# Personal data must never reach this public repository (SPEC.md, privacy rule 4).
+# Backups, statements and spreadsheets stay on the device or outside the repo.
+*.carteira
+*.xlsx
+*.xls
+*.csv
+*.ofx
+*.pdf
+backups/
+private/
+extratos/
+
+# Environment and editor files
+.env
+.env.*
+.DS_Store
+Thumbs.db
+.vscode/
