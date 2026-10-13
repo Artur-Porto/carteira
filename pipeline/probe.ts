@@ -156,7 +156,7 @@ async function probeTesouro(): Promise<Result> {
 }
 
 // ---------- B3 COTAHIST ----------
-// Layout: https://www.b3.com.br/data/files/C8/F3/08/B4/297BE410F816C9E492D828A8/SeriesHistoricas_Layout.pdf
+// Fixed-width layout documented on the B3 "Cotações históricas" page (linked from SPEC.md).
 const BDI: Record<string, string> = { '02': 'ações (lote padrão)', '12': 'FIIs', '14': 'ETFs e certificados', '34': 'BDR nível 1', '35': 'BDR nível 2', '36': 'BDR nível 3', '07': 'recuperação judicial', '08': 'regime especial' };
 
 async function probeB3(): Promise<Result> {
