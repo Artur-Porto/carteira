@@ -96,8 +96,8 @@ A página de teste está em **https://artur-porto.github.io/carteira/**. É um P
 
 | Teste | Como | Resultado no Chrome headless (Windows) | Resultado no iPhone |
 | --- | --- | --- | --- |
-| Instalação pela tela de início | `display-mode: standalone` | Não se aplica | OK (12/10, 21:45) |
-| Abertura offline | Cada abertura grava linha no IndexedDB com o estado da rede | OK (recarregou offline pelo service worker) | OK: reabriu pelo ícone, offline, com o service worker ativo (12/10, 21:47) |
+| Instalação pela tela de início | `display-mode: standalone` | Não se aplica | OK |
+| Abertura offline | Cada abertura grava linha no IndexedDB com o estado da rede | OK (recarregou offline pelo service worker) | OK: reabriu pelo ícone, offline, com o service worker ativo |
 | Armazenamento persistente | `navigator.storage.persist()` | `false` (esperado no Chrome headless) | OK: concedido; cota de cerca de 38 GB |
 | IndexedDB | Grava e lê uma carteira fictícia | OK | OK, inclusive entre o fechamento e a reabertura do app |
 | Cifra do backup | AES-GCM 256, PBKDF2-SHA-256 com 600 mil iterações; senha errada e arquivo corrompido | OK, 268 ms para derivar a chave | OK, 111 ms para derivar a chave; senha errada e arquivo corrompido recusados |
@@ -109,7 +109,7 @@ A página de teste está em **https://artur-porto.github.io/carteira/**. É um P
 
 ### Primeira rodada no iPhone (12/10/2026)
 
-Aparelho: iPhone com Safari 26.6.1. O user agent informa "iPhone OS 18_7" porque o iOS 26 congela esse campo; a versão real vem de `Version/26.6.1`.
+Aparelho: iPhone com iOS 26. Nesta versão o user agent congela o campo do sistema ("iPhone OS 18_7"); a versão real do Safari vem do campo `Version/`.
 
 O primeiro relatório trouxe só as aberturas, porque a página v1 guardava os resultados na memória e os perdia ao fechar o app. Num segundo relatório, ainda da v1, todos os testes automáticos passaram. A página v2 grava os resultados no IndexedDB e roda os testes a cada abertura.
 
