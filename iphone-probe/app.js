@@ -20,17 +20,38 @@ const results = new Map();
 const fileResults = new Map();
 const $ = id => document.getElementById(id);
 
-function setResult(map, listId, key, status, label, detail = '') {
-  map.set(key, { status, label, detail });
-  const ul = $(listId);
-  ul.replaceChildren(...[...map.values()].map(r => {
+const TAGS = { ok: 'OK', fail: 'FALHOU', info: 'INFO', manual: 'VERIFICAR' };
+const where = r => r.at ? ` (${fmt(r.at)}, ${r.standalone ? 'tela de início' : 'Safari'}, ${r.online ? 'online' : 'offline'})` : '';
+
+function render(map, listId) {
+  $(listId).replaceChildren(...[...map.values()].map(r => {
     const li = document.createElement('li');
     const tag = document.createElement('span');
     tag.className = `tag ${r.status}`;
-    tag.textContent = { ok: 'OK', fail: 'FALHOU', info: 'INFO', manual: 'VERIFICAR' }[r.status];
-    li.append(tag, ` ${r.label}${r.detail ? ' — ' + r.detail : ''}`);
+    tag.textContent = TAGS[r.status];
+    li.append(tag, ` ${r.label}${r.detail ? ' — ' + r.detail : ''}${where(r)}`);
     return li;
   }));
+}
+
+// Results are saved in IndexedDB so they survive closing the app for the offline step.
+async function saveResults() {
+  const db = await openDb();
+  await tx(db, 'kv', 'readwrite', s => s.put({ tests: [...results], files: [...fileResults] }, 'results'));
+}
+async function loadResults() {
+  const db = await openDb();
+  const saved = await tx(db, 'kv', 'readonly', s => s.get('results'));
+  for (const [k, v] of saved?.tests ?? []) results.set(k, v);
+  for (const [k, v] of saved?.files ?? []) fileResults.set(k, v);
+  render(results, 'results');
+  render(fileResults, 'file-results');
+}
+
+function setResult(map, listId, key, status, label, detail = '') {
+  map.set(key, { status, label, detail, at: new Date().toISOString(), standalone: isStandalone(), online: navigator.onLine });
+  render(map, listId);
+  saveResults().catch(() => {});
 }
 const report = (...a) => setResult(results, 'results', ...a);
 const fileReport = (...a) => setResult(fileResults, 'file-results', ...a);
@@ -126,7 +147,6 @@ async function prepareBackup() {
 
 // ---------- Automatic tests ----------
 async function runTests() {
-  results.clear();
   report('ua', 'info', 'Aparelho', navigator.userAgent);
   report('secure', isSecureContext ? 'ok' : 'fail', 'Contexto seguro (HTTPS)');
   report('standalone', isStandalone() ? 'ok' : 'manual', 'Aberto pela tela de início', isStandalone() ? '' : 'abra pelo ícone e rode de novo');
@@ -236,9 +256,9 @@ async function importSheet(ev) {
 
 // ---------- Report ----------
 function buildReport() {
-  const line = r => `[${{ ok: 'OK', fail: 'FALHOU', info: 'INFO', manual: 'VERIFICAR' }[r.status]}] ${r.label}${r.detail ? ' — ' + r.detail : ''}`;
+  const line = r => `[${TAGS[r.status]}] ${r.label}${r.detail ? ' — ' + r.detail : ''}${where(r)}`;
   const launches = [...$('launches').children].map(li => '  ' + li.textContent);
-  return ['TESTE-IPHONE marco 0', `Gerado em ${new Date().toISOString()}`, '',
+  return ['TESTE-IPHONE marco 0 (página v2)', `Gerado em ${new Date().toISOString()}`, '',
     ...[...results.values()].map(line), ...[...fileResults.values()].map(line), '', 'Aberturas (mais recentes primeiro):', ...launches].join('\n');
 }
 async function copyReport() {
@@ -266,5 +286,9 @@ $('copy').addEventListener('click', copyReport);
 $('reset').addEventListener('click', resetAll);
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { scope: './' });
-recordLaunch().catch(e => report('idb', 'fail', 'IndexedDB na abertura', String(e)));
+// Every launch records itself, restores saved results and reruns the automatic tests.
+recordLaunch()
+  .then(loadResults)
+  .catch(e => report('idb', 'fail', 'IndexedDB na abertura', String(e)))
+  .finally(runTests);
 prepareBackup().catch(() => {});

@@ -95,16 +95,20 @@ A página de teste está em **https://artur-porto.github.io/carteira/**. É um P
 
 | Teste | Como | Resultado no Chrome headless (Windows) | Resultado no iPhone |
 | --- | --- | --- | --- |
-| Instalação pela tela de início | `display-mode: standalone` | Não se aplica | _pendente_ |
-| Abertura offline | Cada abertura grava linha no IndexedDB com o estado da rede | OK (recarregou offline pelo service worker) | _pendente_ |
+| Instalação pela tela de início | `display-mode: standalone` | Não se aplica | OK (12/10, 21:45) |
+| Abertura offline | Cada abertura grava linha no IndexedDB com o estado da rede | OK (recarregou offline pelo service worker) | OK: reabriu pelo ícone, offline, com o service worker ativo (12/10, 21:47) |
 | Armazenamento persistente | `navigator.storage.persist()` | `false` (esperado no Chrome headless) | _pendente_ |
-| IndexedDB | Grava e lê uma carteira fictícia | OK | _pendente_ |
+| IndexedDB | Grava e lê uma carteira fictícia | OK | Parcial: manteve os registros entre o fechamento e a reabertura do app |
 | Cifra do backup | AES-GCM 256, PBKDF2-SHA-256 com 600 mil iterações; senha errada e arquivo corrompido | OK, 268 ms para derivar a chave | _pendente_ (medir o tempo) |
 | CSP | Tenta ler o SGS direto do app; deve ser bloqueado | OK, bloqueado por `connect-src` antes de sair da máquina | _pendente_ |
 | Exportar pelo Compartilhar | `navigator.share({files})` com `.carteira` | `canShare` = sim | _pendente_ |
 | Exportar por download | `<a download>` | Não testado | _pendente_ |
 | Importar backup | Seletor de arquivo, decifra e compara com o original | Não testado | _pendente_ |
 | Importar planilha | Seletor com `.csv` e `.xlsx`; informa só formato e tamanho | Não testado | _pendente_ |
+
+### Primeira rodada no iPhone (12/10/2026)
+
+O relatório da página v1 trouxe só as aberturas: os resultados dos testes ficavam na memória e se perdiam ao fechar o app no passo do modo avião. A página v2 grava os resultados no IndexedDB e roda os testes automáticos a cada abertura. Os demais itens aguardam a segunda rodada.
 
 ### Roteiro no aparelho
 
