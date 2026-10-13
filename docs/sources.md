@@ -13,7 +13,8 @@ Validação feita em 12/10/2026. Este arquivo registra o que funcionou, o que fa
 | Cripto: Mercado Bitcoin | Funciona local e no runner | Fonte principal |
 | Cripto: Coinbase | Funciona local e no runner | Reserva |
 | Cripto: Binance | Bloqueada no runner (HTTP 451) | Descartada |
-| iPhone: instalação, offline, armazenamento, arquivos | Página publicada; **aguarda teste no aparelho** | Ver seção iPhone |
+| iPhone: instalação, offline, armazenamento, cifra, CSP | OK no aparelho | Ver seção iPhone |
+| iPhone: exportar e importar arquivo | **Aguarda teste no aparelho** | Ver seção iPhone |
 | Parâmetros fiscais "A confirmar" | Todos confirmados em fonte oficial | Ver seção fiscal |
 
 ## Como reproduzir
@@ -97,18 +98,22 @@ A página de teste está em **https://artur-porto.github.io/carteira/**. É um P
 | --- | --- | --- | --- |
 | Instalação pela tela de início | `display-mode: standalone` | Não se aplica | OK (12/10, 21:45) |
 | Abertura offline | Cada abertura grava linha no IndexedDB com o estado da rede | OK (recarregou offline pelo service worker) | OK: reabriu pelo ícone, offline, com o service worker ativo (12/10, 21:47) |
-| Armazenamento persistente | `navigator.storage.persist()` | `false` (esperado no Chrome headless) | _pendente_ |
-| IndexedDB | Grava e lê uma carteira fictícia | OK | Parcial: manteve os registros entre o fechamento e a reabertura do app |
-| Cifra do backup | AES-GCM 256, PBKDF2-SHA-256 com 600 mil iterações; senha errada e arquivo corrompido | OK, 268 ms para derivar a chave | _pendente_ (medir o tempo) |
-| CSP | Tenta ler o SGS direto do app; deve ser bloqueado | OK, bloqueado por `connect-src` antes de sair da máquina | _pendente_ |
-| Exportar pelo Compartilhar | `navigator.share({files})` com `.carteira` | `canShare` = sim | _pendente_ |
+| Armazenamento persistente | `navigator.storage.persist()` | `false` (esperado no Chrome headless) | OK: concedido; cota de cerca de 38 GB |
+| IndexedDB | Grava e lê uma carteira fictícia | OK | OK, inclusive entre o fechamento e a reabertura do app |
+| Cifra do backup | AES-GCM 256, PBKDF2-SHA-256 com 600 mil iterações; senha errada e arquivo corrompido | OK, 268 ms para derivar a chave | OK, 111 ms para derivar a chave; senha errada e arquivo corrompido recusados |
+| CSP | Tenta ler o SGS direto do app; deve ser bloqueado | OK, bloqueado por `connect-src` antes de sair da máquina | OK, bloqueado por `connect-src` |
+| Exportar pelo Compartilhar | `navigator.share({files})` com `.carteira` | `canShare` = sim | `canShare` = sim; falta salvar de fato |
 | Exportar por download | `<a download>` | Não testado | _pendente_ |
 | Importar backup | Seletor de arquivo, decifra e compara com o original | Não testado | _pendente_ |
 | Importar planilha | Seletor com `.csv` e `.xlsx`; informa só formato e tamanho | Não testado | _pendente_ |
 
 ### Primeira rodada no iPhone (12/10/2026)
 
-O relatório da página v1 trouxe só as aberturas: os resultados dos testes ficavam na memória e se perdiam ao fechar o app no passo do modo avião. A página v2 grava os resultados no IndexedDB e roda os testes automáticos a cada abertura. Os demais itens aguardam a segunda rodada.
+Aparelho: iPhone com Safari 26.6.1. O user agent informa "iPhone OS 18_7" porque o iOS 26 congela esse campo; a versão real vem de `Version/26.6.1`.
+
+O primeiro relatório trouxe só as aberturas, porque a página v1 guardava os resultados na memória e os perdia ao fechar o app. Num segundo relatório, ainda da v1, todos os testes automáticos passaram. A página v2 grava os resultados no IndexedDB e roda os testes a cada abertura.
+
+Faltam os quatro testes de arquivo: exportar pelo Compartilhar, exportar por download, importar o backup e importar uma planilha.
 
 ### Roteiro no aparelho
 
@@ -152,6 +157,6 @@ Não alterei o SPEC. Se você aprovar, aplico estes ajustes:
 
 ## Pendências para fechar o marco 0
 
-- [ ] Rodar o roteiro no iPhone e colar o resultado na conversa.
-- [ ] Preencher a coluna "Resultado no iPhone" deste arquivo.
+- [x] Testes automáticos no iPhone: instalação, offline, armazenamento persistente, IndexedDB, cifra e CSP.
+- [ ] Testes de arquivo no iPhone: exportar pelo Compartilhar, exportar por download, importar backup e importar planilha.
 - [ ] Decidir sobre os ajustes no SPEC.md.
