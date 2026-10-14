@@ -1,0 +1,323 @@
+/* One-handed iPhone layout: 44 pt touch targets, safe areas, light and dark from the system. */
+:root {
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --text: #1a1d1b;
+  --muted: #5b625e;
+  --border: #d9ddd9;
+  --accent: #0f6e56;
+  --accent-text: #ffffff;
+  --danger: #a32020;
+  --notice-bg: #fff4d6;
+  --notice-text: #5c3d00;
+  --tabbar-height: 56px;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #101211;
+    --surface: #1a1d1b;
+    --text: #eef1ee;
+    --muted: #a3aaa6;
+    --border: #2f3431;
+    --accent: #3fb68f;
+    --accent-text: #0b1a14;
+    --danger: #ff8a80;
+    --notice-bg: #3a2f12;
+    --notice-text: #f5d58a;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+a {
+  color: var(--accent);
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Top bar: back button, title, discreet-mode toggle. */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  gap: 8px;
+  padding: max(6px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 6px max(12px, env(safe-area-inset-left));
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.screen {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 8px max(16px, env(safe-area-inset-right)) calc(var(--tabbar-height) + 24px + env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+}
+
+.welcome {
+  padding-top: max(48px, env(safe-area-inset-top));
+}
+
+.welcome h1 {
+  margin: 0 0 8px;
+  font-size: 2rem;
+}
+
+/* Bottom tab bar. */
+.tabbar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.tabbar a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: var(--tabbar-height);
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-decoration: none;
+}
+
+.tabbar a[aria-current='page'] {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Content. */
+.card {
+  margin: 12px 0;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.card h2 {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+}
+
+.card h3 {
+  margin: 14px 0 2px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.card p {
+  margin: 8px 0;
+}
+
+.big {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.small {
+  font-size: 0.85rem;
+}
+
+.money {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.notice {
+  padding: 12px 14px;
+  background: var(--notice-bg);
+  color: var(--notice-text);
+  border-radius: 12px;
+}
+
+.error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rows > li,
+.rows > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.rows > :first-child {
+  border-top: 0;
+}
+
+.rows dt,
+.rows dd {
+  margin: 0;
+}
+
+.rows .name {
+  display: block;
+}
+
+.menu {
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.menu li + li {
+  border-top: 1px solid var(--border);
+}
+
+.menu a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 60px;
+  padding: 10px 16px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.menu a > span {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Controls. */
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  margin: 8px 0;
+  padding: 10px 14px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button.primary {
+  background: var(--accent);
+  color: var(--accent-text);
+  border-color: var(--accent);
+}
+
+.button.danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button.file {
+  position: relative;
+  overflow: hidden;
+}
+
+.button.file input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  font-size: 100px;
+  cursor: pointer;
+}
+
+.field {
+  display: block;
+  margin: 10px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.field input {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 4px;
+  padding: 8px 12px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font: inherit;
+  /* 16px or more keeps iOS from zooming into the field. */
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.fatal {
+  padding: 24px;
+}

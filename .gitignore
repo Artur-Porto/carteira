@@ -21,3 +21,7 @@ extratos/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Test output
+test-results/
+playwright-report/

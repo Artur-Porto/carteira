@@ -90,7 +90,7 @@ Cripto continua opcional: se as duas fontes falharem, o arquivo anterior é mant
 
 ## iPhone
 
-A página de teste está em **https://artur-porto.github.io/carteira/**. É um PWA mínimo, só com dados fictícios, com a mesma CSP prevista para o app (`default-src 'self'; connect-src 'self'`).
+A página de teste ficou em https://artur-porto.github.io/carteira/ até o marco 1, quando o app tomou o lugar dela; o código continua em `iphone-probe/`. É um PWA mínimo, só com dados fictícios, com a mesma CSP prevista para o app (`default-src 'self'; connect-src 'self'`).
 
 ### O que a página testa
 
