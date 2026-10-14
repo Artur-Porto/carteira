@@ -1,7 +1,9 @@
 // Milestone 0 iPhone probe. Fictitious data only; no network beyond this origin.
+const PAGE = 'v3';
 const PASSWORD = 'teste-marco-0';
 const PBKDF2_ITERATIONS = 600_000;
 const MAGIC = new TextEncoder().encode('CART0'); // probe format, not the final .carteira layout
+const BAD_HEADER = 'cabeçalho inválido';
 
 // Deterministic fictitious portfolio, so an imported backup can be checked for identity.
 const DEMO = {
@@ -15,6 +17,14 @@ const DEMO = {
   ],
   note: 'Acentuação de teste: ação, previdência, conciliação, R$ 1.234,56',
 };
+
+// Fictitious spreadsheet for the import test, so no real statement is ever needed.
+const DEMO_CSV = '﻿' + [
+  'Produto;Instituição;Vencimento;Quantidade;Valor',
+  'CDB Banco Fictício A;Banco Fictício A;02/01/2028;1;12.345,67',
+  'Tesouro IPCA+ 2035;Tesouro Nacional;15/05/2035;0,52;1.234,56',
+  'XXXX11;Corretora Fictícia;;37;4.321,00',
+].join('\r\n') + '\r\n';
 
 const results = new Map();
 const fileResults = new Map();
@@ -34,14 +44,15 @@ function render(map, listId) {
   }));
 }
 
-// Results are saved in IndexedDB so they survive closing the app for the offline step.
+// Results are saved in IndexedDB per page version: they survive closing the app,
+// and results from an older version never mix in.
 async function saveResults() {
   const db = await openDb();
-  await tx(db, 'kv', 'readwrite', s => s.put({ tests: [...results], files: [...fileResults] }, 'results'));
+  await tx(db, 'kv', 'readwrite', s => s.put({ tests: [...results], files: [...fileResults] }, `results-${PAGE}`));
 }
 async function loadResults() {
   const db = await openDb();
-  const saved = await tx(db, 'kv', 'readonly', s => s.get('results'));
+  const saved = await tx(db, 'kv', 'readonly', s => s.get(`results-${PAGE}`));
   for (const [k, v] of saved?.tests ?? []) results.set(k, v);
   for (const [k, v] of saved?.files ?? []) fileResults.set(k, v);
   render(results, 'results');
@@ -104,7 +115,6 @@ async function renderLaunches(db) {
 
 // ---------- Crypto ----------
 const enc = new TextEncoder();
-const dec = new TextDecoder();
 async function sha256Hex(bytes) {
   const h = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
   return [...h].map(b => b.toString(16).padStart(2, '0')).join('');
@@ -128,22 +138,25 @@ async function encryptBackup(obj, password) {
   return { bytes: out, kdfMs };
 }
 async function decryptBackup(bytes, password) {
-  if (MAGIC.some((b, i) => bytes[i] !== b)) throw new Error('cabeçalho inválido');
+  if (MAGIC.some((b, i) => bytes[i] !== b)) throw new Error(BAD_HEADER);
   const iterations = new DataView(bytes.buffer, bytes.byteOffset).getUint32(MAGIC.length);
   const o = MAGIC.length + 4;
   const key = await deriveKey(password, bytes.slice(o, o + 16), iterations);
   const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bytes.slice(o + 16, o + 28) }, key, bytes.slice(o + 28));
   return new Uint8Array(pt);
 }
+// Layout: magic, iterations (uint32), salt (16), IV (12), then the ciphertext and its 16-byte tag.
+const BACKUP_SIZE = MAGIC.length + 4 + 16 + 12 + enc.encode(JSON.stringify(DEMO)).length + 16;
 
 // The backup is prepared ahead of time so share() runs inside the tap's user activation.
 let prepared = null;
 async function prepareBackup() {
-  const { bytes, kdfMs } = await encryptBackup(DEMO, PASSWORD);
-  const name = `teste-ficticio-${new Date().toISOString().slice(0, 10)}.carteira`;
-  prepared = { file: new File([bytes], name, { type: 'application/octet-stream' }), kdfMs };
+  prepared = await encryptBackup(DEMO, PASSWORD);
   return prepared;
 }
+// Each export method gets its own file name, so an import can tell where a file came from.
+const backupFile = (p, via) => new File([p.bytes], `teste-ficticio-${via}.carteira`, { type: 'application/octet-stream' });
+const sheetFile = () => new File([DEMO_CSV], 'planilha-ficticia.csv', { type: 'text/csv' });
 
 // ---------- Automatic tests ----------
 async function runTests() {
@@ -178,12 +191,11 @@ async function runTests() {
 
   try {
     const p = await prepareBackup();
-    const bytes = new Uint8Array(await p.file.arrayBuffer());
-    const roundtrip = await decryptBackup(bytes, PASSWORD);
+    const roundtrip = await decryptBackup(p.bytes, PASSWORD);
     const same = await sha256Hex(roundtrip) === await sha256Hex(enc.encode(JSON.stringify(DEMO)));
     let wrongRejected = false;
-    try { await decryptBackup(bytes, 'senha-errada'); } catch { wrongRejected = true; }
-    const corrupt = bytes.slice(); corrupt[corrupt.length - 1] ^= 0xff;
+    try { await decryptBackup(p.bytes, 'senha-errada'); } catch { wrongRejected = true; }
+    const corrupt = p.bytes.slice(); corrupt[corrupt.length - 1] ^= 0xff;
     let corruptRejected = false;
     try { await decryptBackup(corrupt, PASSWORD); } catch { corruptRejected = true; }
     report('crypto', same && wrongRejected && corruptRejected ? 'ok' : 'fail', 'AES-GCM 256 + PBKDF2-SHA-256',
@@ -213,44 +225,99 @@ async function runTests() {
 }
 
 // ---------- Export / import ----------
+// Any file may be chosen in the pickers, so reports carry only its format and size.
+// Names are matched against the probe's own names and never reported.
+function originOf(name) {
+  const m = /^teste-ficticio-(compartilhar|download)/.exec(name);
+  if (m) return m[1];
+  return /^teste-ficticio-\d{4}-\d{2}-\d{2}/.test(name) ? 'página v2' : 'outro arquivo';
+}
+function extLabel(name) {
+  const i = name.lastIndexOf('.');
+  return i > 0 ? `extensão ${name.slice(i).toLowerCase()}` : 'sem extensão';
+}
+// Coarse format from the first bytes, enough to explain a wrong file without revealing it.
+function sniff(head) {
+  const s = String.fromCharCode(...head);
+  if (!head.length) return 'arquivo vazio';
+  if (s.startsWith('CART0')) return 'backup de teste';
+  if (s.startsWith('PK')) return 'zip (xlsx, docx)';
+  if (head[0] === 0xd0 && head[1] === 0xcf) return 'OLE (xls antigo)';
+  if (s.startsWith('%PDF')) return 'PDF';
+  if (s.startsWith('bplist')) return 'plist binária (webarchive?)';
+  if (head[0] === 0xff && head[1] === 0xd8) return 'imagem JPEG';
+  if (s.startsWith('\x89PNG')) return 'imagem PNG';
+  if (s.slice(4, 8) === 'ftyp') return 'foto ou vídeo (HEIC, MOV)';
+  if (/^(\xef\xbb\xbf)?\s*</.test(s)) return 'HTML ou XML';
+  if (/^(blob|data|https?):/.test(s)) return 'texto com um endereço';
+  return head.every(b => b >= 32 || b === 9 || b === 10 || b === 13) ? 'texto' : 'binário desconhecido';
+}
+
+// share() resolves only after an action is completed in the menu; cancelling rejects with AbortError.
+async function shareFile(key, label, file, title) {
+  try {
+    await navigator.share({ files: [file], title });
+    fileReport(key, 'manual', label, 'ação concluída no menu; confirme se o arquivo chegou em Arquivos');
+  } catch (e) {
+    fileReport(key, e.name === 'AbortError' ? 'manual' : 'fail', label, `${e.name}: ${e.message}`);
+  }
+}
 async function exportShare() {
   const p = prepared ?? await prepareBackup();
-  try {
-    await navigator.share({ files: [p.file], title: 'Backup fictício' });
-    fileReport('export-share', 'manual', 'Exportação pelo Compartilhar', 'menu abriu; confirme se o arquivo foi salvo em Arquivos');
-  } catch (e) {
-    fileReport('export-share', e.name === 'AbortError' ? 'manual' : 'fail', 'Exportação pelo Compartilhar', `${e.name}: ${e.message}`);
-  }
+  await shareFile('export-share', 'Exportação do backup pelo Compartilhar', backupFile(p, 'compartilhar'), 'Backup fictício');
 }
 async function exportDownload() {
   const p = prepared ?? await prepareBackup();
-  const url = URL.createObjectURL(p.file);
+  const file = backupFile(p, 'download');
+  const url = URL.createObjectURL(file);
   const a = document.createElement('a');
-  a.href = url; a.download = p.file.name;
+  a.href = url; a.download = file.name;
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
-  fileReport('export-download', 'manual', 'Exportação por download', 'confira o que o iPhone mostrou e se o arquivo chegou em Arquivos');
+  fileReport('export-download', 'manual', 'Exportação do backup por download', 'a página não vê o resultado: anote o que o iPhone mostrou e se o arquivo chegou em Arquivos');
 }
+async function exportSheet() {
+  await shareFile('export-sheet', 'Planilha fictícia pelo Compartilhar', sheetFile(), 'Planilha fictícia');
+}
+
 async function importBackup(ev) {
   const f = ev.target.files?.[0];
   if (!f) return;
+  const via = originOf(f.name);
+  const done = (status, detail) => fileReport(`import-backup:${via}`, status, `Importação do backup (${via})`,
+    `${f.size} bytes, o exportado tem ${BACKUP_SIZE}; ${extLabel(f.name)}; tipo informado "${f.type || 'vazio'}"; ${detail}`);
+  let bytes = new Uint8Array();
   try {
-    const pt = await decryptBackup(new Uint8Array(await f.arrayBuffer()), PASSWORD);
+    bytes = new Uint8Array(await f.arrayBuffer());
+    const pt = await decryptBackup(bytes, PASSWORD);
     const same = await sha256Hex(pt) === await sha256Hex(enc.encode(JSON.stringify(DEMO)));
-    fileReport('import-backup', same ? 'ok' : 'fail', 'Importação do backup', `${f.size} bytes; conteúdo ${same ? 'idêntico ao exportado' : 'DIFERENTE'}; tipo informado "${f.type || 'vazio'}"`);
+    done(same ? 'ok' : 'fail', `conteúdo ${same ? 'idêntico ao exportado' : 'DIFERENTE'}`);
   } catch (e) {
-    fileReport('import-backup', 'fail', 'Importação do backup', `${e.name}: ${e.message}`);
+    done('fail', e.message === BAD_HEADER ? `não é o backup: começa como ${sniff(bytes.subarray(0, 16))}`
+      : e.name === 'OperationError' ? 'cabeçalho certo, mas a decifra falhou: arquivo alterado ou cortado'
+      : `${e.name}: ${e.message}`);
   }
   ev.target.value = '';
 }
 async function importSheet(ev) {
   const f = ev.target.files?.[0];
   if (!f) return;
-  // The file may be real: only its format and size are reported, never its name or content.
-  const head = new Uint8Array(await f.slice(0, 8).arrayBuffer());
-  const ext = (f.name.split('.').pop() || '').toLowerCase();
-  const kind = head[0] === 0x50 && head[1] === 0x4b ? 'zip (xlsx)' : head[0] === 0xd0 && head[1] === 0xcf ? 'OLE (xls)' : 'texto (csv?)';
-  fileReport('import-sheet', 'ok', 'Seletor de arquivos lê planilha', `extensão .${ext}; ${kind}; ${(f.size / 1024).toFixed(1)} KB; tipo informado "${f.type || 'vazio'}"`);
+  // The probe's own fictitious sheet is also compared byte for byte.
+  const fictitious = f.name.startsWith('planilha-ficticia');
+  const key = `import-sheet:${fictitious ? 'ficticia' : 'outra'}`;
+  const label = `Importação de planilha (${fictitious ? 'fictícia' : 'outra'})`;
+  try {
+    const head = new Uint8Array(await f.slice(0, 16).arrayBuffer());
+    let status = 'ok', check = '';
+    if (fictitious) {
+      const same = await sha256Hex(await f.arrayBuffer()) === await sha256Hex(await sheetFile().arrayBuffer());
+      status = same ? 'ok' : 'fail';
+      check = `; ${same ? 'idêntica à gerada' : 'DIFERENTE da gerada'}`;
+    }
+    fileReport(key, status, label, `${extLabel(f.name)}; ${sniff(head)}; ${(f.size / 1024).toFixed(1)} KB; tipo informado "${f.type || 'vazio'}"${check}`);
+  } catch (e) {
+    fileReport(key, 'fail', label, `${e.name}: ${e.message}`);
+  }
   ev.target.value = '';
 }
 
@@ -258,7 +325,7 @@ async function importSheet(ev) {
 function buildReport() {
   const line = r => `[${TAGS[r.status]}] ${r.label}${r.detail ? ' — ' + r.detail : ''}${where(r)}`;
   const launches = [...$('launches').children].map(li => '  ' + li.textContent);
-  return ['TESTE-IPHONE marco 0 (página v2)', `Gerado em ${new Date().toISOString()}`, '',
+  return [`TESTE-IPHONE marco 0 (página ${PAGE})`, `Gerado em ${new Date().toISOString()}`, '',
     ...[...results.values()].map(line), ...[...fileResults.values()].map(line), '', 'Aberturas (mais recentes primeiro):', ...launches].join('\n');
 }
 async function copyReport() {
@@ -280,12 +347,18 @@ async function resetAll() {
 $('run').addEventListener('click', runTests);
 $('export-share').addEventListener('click', exportShare);
 $('export-download').addEventListener('click', exportDownload);
+$('export-sheet').addEventListener('click', exportSheet);
 $('import-backup').addEventListener('change', importBackup);
 $('import-sheet').addEventListener('change', importSheet);
 $('copy').addEventListener('click', copyReport);
 $('reset').addEventListener('click', resetAll);
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { scope: './' });
+if ('serviceWorker' in navigator) {
+  // When a newer probe takes over on launch, reload once so the page matches its cache.
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) location.reload(); });
+  navigator.serviceWorker.register('sw.js', { scope: './' });
+}
 // Every launch records itself, restores saved results and reruns the automatic tests.
 recordLaunch()
   .then(loadResults)

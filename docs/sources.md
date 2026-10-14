@@ -14,7 +14,7 @@ Validação feita em 12/10/2026. Este arquivo registra o que funcionou, o que fa
 | Cripto: Coinbase | Funciona local e no runner | Reserva |
 | Cripto: Binance | Bloqueada no runner (HTTP 451) | Descartada |
 | iPhone: instalação, offline, armazenamento, cifra, CSP | OK no aparelho | Ver seção iPhone |
-| iPhone: exportar e importar arquivo | **Aguarda teste no aparelho** | Ver seção iPhone |
+| iPhone: exportar e importar arquivo | Segunda rodada inconclusiva: o Compartilhar concluiu a ação, mas a importação recusou um arquivo de origem desconhecida | Refazer com a página v3 |
 | Parâmetros fiscais "A confirmar" | Todos confirmados em fonte oficial | Ver seção fiscal |
 
 ## Como reproduzir
@@ -98,14 +98,16 @@ A página de teste está em **https://artur-porto.github.io/carteira/**. É um P
 | --- | --- | --- | --- |
 | Instalação pela tela de início | `display-mode: standalone` | Não se aplica | OK |
 | Abertura offline | Cada abertura grava linha no IndexedDB com o estado da rede | OK (recarregou offline pelo service worker) | OK: reabriu pelo ícone, offline, com o service worker ativo |
-| Armazenamento persistente | `navigator.storage.persist()` | `false` (esperado no Chrome headless) | OK: concedido; cota de cerca de 38 GB |
+| Armazenamento persistente | `navigator.storage.persist()` | `false` (esperado no Chrome headless) | OK: concedido, com cota de dezenas de GB |
 | IndexedDB | Grava e lê uma carteira fictícia | OK | OK, inclusive entre o fechamento e a reabertura do app |
 | Cifra do backup | AES-GCM 256, PBKDF2-SHA-256 com 600 mil iterações; senha errada e arquivo corrompido | OK, 268 ms para derivar a chave | OK, 111 ms para derivar a chave; senha errada e arquivo corrompido recusados |
 | CSP | Tenta ler o SGS direto do app; deve ser bloqueado | OK, bloqueado por `connect-src` antes de sair da máquina | OK, bloqueado por `connect-src` |
-| Exportar pelo Compartilhar | `navigator.share({files})` com `.carteira` | `canShare` = sim | `canShare` = sim; falta salvar de fato |
-| Exportar por download | `<a download>` | Não testado | _pendente_ |
-| Importar backup | Seletor de arquivo, decifra e compara com o original | Não testado | _pendente_ |
-| Importar planilha | Seletor com `.csv` e `.xlsx`; informa só formato e tamanho | Não testado | _pendente_ |
+| Exportar pelo Compartilhar | `navigator.share({files})` com `teste-ficticio-compartilhar.carteira` | OK, com o menu simulado | O menu abriu e a ação foi concluída; falta confirmar o arquivo em Arquivos |
+| Exportar por download | `<a download>` com `teste-ficticio-download.carteira` | OK | Sem relato do que o iPhone mostrou |
+| Importar backup | Seletor de arquivo; decifra e compara com o original. Informa a origem pelo nome, o tamanho e o formato | OK com os dois arquivos; arquivo errado e backup corrompido recusados com o motivo certo | Na v2, recusou o arquivo escolhido ("cabeçalho inválido"), de origem desconhecida |
+| Importar planilha | Seletor com `.csv` e `.xlsx`. A página gera uma planilha fictícia e a confere byte a byte | OK, idêntica à gerada | Não feito |
+
+A coluna do Chrome headless, nas linhas de arquivo, vem de um teste local da v3 em 13/10/2026, com o menu Compartilhar simulado. O relatório desse teste não trouxe nome nem conteúdo dos arquivos que não eram da página.
 
 ### Primeira rodada no iPhone (12/10/2026)
 
@@ -115,21 +117,38 @@ O primeiro relatório trouxe só as aberturas, porque a página v1 guardava os r
 
 Faltam os quatro testes de arquivo: exportar pelo Compartilhar, exportar por download, importar o backup e importar uma planilha.
 
-### Roteiro no aparelho
+### Segunda rodada no iPhone (13/10/2026)
 
-1. Abra o endereço no Safari e toque em Compartilhar → Adicionar à Tela de Início.
-2. Abra pelo ícone e toque em **Rodar testes**.
-3. Toque em **Exportar pelo menu Compartilhar** e salve em Arquivos. Repita com **Exportar por download**.
-4. Em **Importar arquivo .carteira**, escolha o arquivo salvo. Em **Importar planilha**, escolha qualquer `.csv` ou `.xlsx` (só o formato e o tamanho aparecem; nome e conteúdo nunca entram no relatório).
-5. Ative o modo avião, feche o app pelo seletor de apps e abra de novo pelo ícone.
-6. Toque em **Rodar testes** outra vez e depois em **Copiar resultado**. Cole o texto na conversa com o Claude Code.
+Com a página v2, os testes automáticos passaram de novo. Nos testes de arquivo:
 
-O relatório copiado traz o modelo do aparelho e a versão do iOS (pelo user agent) e os resultados. Não traz nada da sua carteira.
+- **Compartilhar:** o menu abriu e a ação foi concluída. O `navigator.share` só resolve depois que uma ação é concluída no menu; cancelar gera `AbortError`. Falta confirmar que o arquivo chegou em Arquivos.
+- **Download:** a página não vê o resultado, e não houve relato do que o iPhone mostrou.
+- **Importar backup:** recusado com "cabeçalho inválido", ou seja, o arquivo escolhido não começava com a assinatura do backup. A v2 dava o mesmo nome às duas exportações e não registrava nada do arquivo recusado. Por isso, não dá para saber se ele veio do Compartilhar, do download ou de outro lugar.
+- **Importar planilha:** não foi feito.
+
+### Página v3
+
+- Cada exportação tem nome próprio: `teste-ficticio-compartilhar.carteira` e `teste-ficticio-download.carteira`.
+- A importação diz de onde veio o arquivo, comparando o nome com os da própria página. Também informa o tamanho, a extensão e o tipo informado pelo sistema. Se o cabeçalho não bater, informa o formato pelos primeiros bytes (zip, PDF, imagem, HTML, texto e outros). Nome e conteúdo de outros arquivos nunca entram no relatório.
+- Um botão gera uma planilha fictícia em `.csv`, para o teste não depender de um extrato real. A importação confere essa planilha byte a byte.
+- Os resultados da v3 ficam separados dos da v2. A partir da v3, quando uma versão nova da página assume, ela recarrega sozinha.
+
+### Roteiro no aparelho (v3)
+
+1. Abra pelo ícone da tela de início. Se o topo não disser "Página v3", feche o app pelo seletor de apps e abra de novo.
+2. Toque em **Rodar testes**.
+3. Toque em **Exportar pelo menu Compartilhar** e salve em Arquivos. Depois toque em **Exportar por download**. Anote o que o iPhone mostrou em cada um.
+4. Em **Importar arquivo .carteira**, escolha o arquivo do Compartilhar. Repita com o do download, se ele tiver chegado em Arquivos.
+5. Toque em **Gerar planilha fictícia** e salve em Arquivos. Em **Importar planilha**, escolha esse arquivo.
+6. Toque em **Copiar resultado** e cole na conversa com o Claude Code, junto com o que o iPhone mostrou nas exportações.
+
+O relatório copiado traz o user agent, com o tipo de aparelho e a versão do sistema, e os resultados. Dos arquivos importados, traz só a origem, o formato e o tamanho. Não traz nada da sua carteira.
 
 ### Pontos de atenção para o marco 1
 
 - O arquivo do backup é preparado antes do toque, porque o Safari exige que `navigator.share` seja chamado logo após o gesto do usuário. A derivação de 600 mil iterações, feita entre o toque e o compartilhamento, pode estourar essa janela.
 - O formato `CART0` da página de teste é provisório. O formato definitivo do `.carteira` sai no marco 1.
+- A importação do app deve dizer por que recusou um arquivo: não é um backup, a senha está errada ou o arquivo foi alterado. Na v2, a falta disso deixou a segunda rodada sem conclusão.
 - A política do WebKit isenta da limpeza de 7 dias os apps abertos pela tela de início. A lista de aberturas permite conferir isso daqui a algumas semanas.
 
 ## Parâmetros fiscais "A confirmar"
@@ -158,5 +177,5 @@ Não alterei o SPEC. Se você aprovar, aplico estes ajustes:
 ## Pendências para fechar o marco 0
 
 - [x] Testes automáticos no iPhone: instalação, offline, armazenamento persistente, IndexedDB, cifra e CSP.
-- [ ] Testes de arquivo no iPhone: exportar pelo Compartilhar, exportar por download, importar backup e importar planilha.
+- [ ] Testes de arquivo no iPhone, com a página v3: exportar pelo Compartilhar, exportar por download, importar backup e importar planilha.
 - [ ] Decidir sobre os ajustes no SPEC.md.

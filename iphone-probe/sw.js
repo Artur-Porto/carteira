@@ -1,5 +1,5 @@
 // Cache-first service worker for the milestone 0 probe. Same-origin only.
-const CACHE = 'probe-v2';
+const CACHE = 'probe-v3';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'data/sample.json'];
 
 self.addEventListener('install', e => {

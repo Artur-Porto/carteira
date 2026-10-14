@@ -20,7 +20,7 @@
 <body>
   <header>
     <h1>Teste do iPhone · Marco 0</h1>
-    <p class="muted">Página v2: os resultados ficam gravados e os testes rodam a cada abertura.</p>
+    <p class="muted">Página v3: cada exportação tem nome próprio, e a importação diz de onde veio o arquivo.</p>
     <p class="muted">Só dados fictícios. Nada sai do aparelho, exceto o arquivo que você exportar.</p>
   </header>
 
@@ -28,10 +28,11 @@
     <section>
       <h2>Como testar</h2>
       <ol>
-        <li>No Safari, toque em Compartilhar → <b>Adicionar à Tela de Início</b>.</li>
-        <li>Abra pelo ícone. Toque em <b>Rodar testes</b>.</li>
-        <li>Teste exportar e importar o arquivo abaixo.</li>
-        <li>Ative o <b>modo avião</b>, feche o app (deslize para cima) e abra de novo pelo ícone.</li>
+        <li>Abra pelo ícone da tela de início. Se o topo não disser <b>Página v3</b>, feche o app e abra de novo.</li>
+        <li>Toque em <b>Rodar testes</b>.</li>
+        <li>Exporte o backup pelos dois botões e anote o que o iPhone mostrou em cada um.</li>
+        <li>Importe os arquivos salvos, um de cada vez.</li>
+        <li>Gere a planilha fictícia, salve em Arquivos e importe.</li>
         <li>Toque em <b>Copiar resultado</b> e cole na conversa.</li>
       </ol>
     </section>
@@ -43,7 +44,8 @@
     </section>
 
     <section>
-      <h2>Backup cifrado fictício</h2>
+      <h2>Arquivos</h2>
+      <h3>Backup cifrado fictício</h3>
       <p class="muted">Senha de teste: <code>teste-marco-0</code>. O conteúdo é uma carteira inventada.</p>
       <button id="export-share" type="button">Exportar pelo menu Compartilhar</button>
       <button id="export-download" type="button">Exportar por download</button>
@@ -51,8 +53,11 @@
         <span>Importar arquivo .carteira</span>
         <input id="import-backup" type="file">
       </label>
+      <h3>Planilha fictícia</h3>
+      <p class="muted">Se importar outra planilha, só o formato e o tamanho aparecem no resultado.</p>
+      <button id="export-sheet" type="button">Gerar planilha fictícia</button>
       <label class="file">
-        <span>Importar planilha qualquer (.csv, .xlsx)</span>
+        <span>Importar planilha (.csv, .xlsx)</span>
         <input id="import-sheet" type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
       </label>
       <ul id="file-results" class="results" aria-live="polite"></ul>
