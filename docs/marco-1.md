@@ -1,6 +1,6 @@
 # Marco 1: esqueleto do app
 
-Construído em 13/10/2026. Aceite do SPEC: instala no iPhone, abre offline e o backup restaura idêntico. O teste no aparelho está pendente.
+Construído em 13/10/2026. Aceite do SPEC: instala no iPhone, abre offline e o backup restaura idêntico. Aceito no iPhone em 14/10/2026, com todos os passos do roteiro abaixo.
 
 ## O que foi entregue
 
@@ -50,3 +50,14 @@ Construído em 13/10/2026. Aceite do SPEC: instala no iPhone, abre offline e o b
 5. **Backup:** em Mais → Ajustes, crie uma senha de teste e toque em **Preparar backup** e depois em **Salvar backup**. No menu, toque em Salvar em Arquivos e escolha a pasta Downloads.
 6. **Restauração:** ainda em Ajustes, digite APAGAR e toque em **Apagar tudo**. Na tela inicial, toque em **Restaurar um backup**, escolha o arquivo e digite a senha. Tudo deve voltar como estava, e Ajustes deve mostrar a data do backup.
 7. Conte o resultado de cada passo e qualquer coisa estranha nas telas.
+
+### Resultado (14/10/2026)
+
+| Passo | Resultado |
+| --- | --- |
+| Instalação pelo ícone novo, no lugar da página de teste | OK |
+| Abertura offline, em modo avião, depois de fechar o app | OK |
+| Backup salvo pelo menu Compartilhar | OK |
+| Apagar tudo e restaurar o backup | OK: tudo voltou como estava |
+
+Marco 1 concluído em 14/10/2026.
