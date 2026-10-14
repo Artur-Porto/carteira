@@ -14,7 +14,7 @@ Validação feita em 12/10/2026. Este arquivo registra o que funcionou, o que fa
 | Cripto: Coinbase | Funciona local e no runner | Reserva |
 | Cripto: Binance | Bloqueada no runner (HTTP 451) | Descartada |
 | iPhone: instalação, offline, armazenamento, cifra, CSP | OK no aparelho | Ver seção iPhone |
-| iPhone: exportar e importar arquivo | Segunda rodada inconclusiva: o Compartilhar concluiu a ação, mas a importação recusou um arquivo de origem desconhecida | Refazer com a página v3 |
+| iPhone: exportar e importar arquivo | OK no aparelho, com a página v3 | Menu Compartilhar no app; download como alternativa fora do iPhone |
 | Parâmetros fiscais "A confirmar" | Todos confirmados em fonte oficial | Ver seção fiscal |
 
 ## Como reproduzir
@@ -102,10 +102,10 @@ A página de teste está em **https://artur-porto.github.io/carteira/**. É um P
 | IndexedDB | Grava e lê uma carteira fictícia | OK | OK, inclusive entre o fechamento e a reabertura do app |
 | Cifra do backup | AES-GCM 256, PBKDF2-SHA-256 com 600 mil iterações; senha errada e arquivo corrompido | OK, 268 ms para derivar a chave | OK, 111 ms para derivar a chave; senha errada e arquivo corrompido recusados |
 | CSP | Tenta ler o SGS direto do app; deve ser bloqueado | OK, bloqueado por `connect-src` antes de sair da máquina | OK, bloqueado por `connect-src` |
-| Exportar pelo Compartilhar | `navigator.share({files})` com `teste-ficticio-compartilhar.carteira` | OK, com o menu simulado | O menu abriu e a ação foi concluída; falta confirmar o arquivo em Arquivos |
-| Exportar por download | `<a download>` com `teste-ficticio-download.carteira` | OK | Sem relato do que o iPhone mostrou |
-| Importar backup | Seletor de arquivo; decifra e compara com o original. Informa a origem pelo nome, o tamanho e o formato | OK com os dois arquivos; arquivo errado e backup corrompido recusados com o motivo certo | Na v2, recusou o arquivo escolhido ("cabeçalho inválido"), de origem desconhecida |
-| Importar planilha | Seletor com `.csv` e `.xlsx`. A página gera uma planilha fictícia e a confere byte a byte | OK, idêntica à gerada | Não feito |
+| Exportar pelo Compartilhar | `navigator.share({files})` com `teste-ficticio-compartilhar.carteira` | OK, com o menu simulado | OK: o menu abriu sem pedir confirmação, e o arquivo foi salvo em Arquivos, na pasta escolhida |
+| Exportar por download | `<a download>` com `teste-ficticio-download.carteira` | OK | OK: também abriu um menu, sem pedir confirmação, e o arquivo foi salvo em Arquivos |
+| Importar backup | Seletor de arquivo; decifra e compara com o original. Informa a origem pelo nome, o tamanho e o formato | OK com os dois arquivos; arquivo errado e backup corrompido recusados com o motivo certo | OK: o arquivo do download voltou idêntico. Na v2, um arquivo de origem desconhecida tinha sido recusado |
+| Importar planilha | Seletor com `.csv` e `.xlsx`. A página gera uma planilha fictícia e a confere byte a byte | OK, idêntica à gerada | OK: a planilha fictícia, salva pelo Compartilhar, voltou idêntica |
 
 A coluna do Chrome headless, nas linhas de arquivo, vem de um teste local da v3 em 13/10/2026, com o menu Compartilhar simulado. O relatório desse teste não trouxe nome nem conteúdo dos arquivos que não eram da página.
 
@@ -144,11 +144,23 @@ Com a página v2, os testes automáticos passaram de novo. Nos testes de arquivo
 
 O relatório copiado traz o user agent, com o tipo de aparelho e a versão do sistema, e os resultados. Dos arquivos importados, traz só a origem, o formato e o tamanho. Não traz nada da sua carteira.
 
+### Terceira rodada no iPhone (13/10/2026)
+
+Com a página v3, os testes automáticos e os quatro testes de arquivo passaram.
+
+- **Exportar:** os dois botões abriram um menu, sem pedir confirmação, e os arquivos foram salvos em Arquivos.
+- **Importar backup:** o arquivo do download voltou idêntico, com o tamanho esperado. O arquivo do Compartilhar não foi reimportado. Ele tem os mesmos bytes, e o aceite do marco 1 ("o backup restaura idêntico") cobre esse caminho.
+- **Importar planilha:** a planilha fictícia, salva pelo Compartilhar, voltou idêntica.
+- **Destino:** o app não escolhe a pasta. O iPhone salva onde o usuário indicar no menu; nesta rodada, no iCloud Drive. Para salvar em Downloads, basta escolher essa pasta na tela de salvar.
+- **Segunda rodada:** as duas exportações agora geram arquivos válidos com o mesmo código da v2. Por isso, o mais provável é que outro arquivo tenha sido escolhido naquela importação.
+
 ### Pontos de atenção para o marco 1
 
 - O arquivo do backup é preparado antes do toque, porque o Safari exige que `navigator.share` seja chamado logo após o gesto do usuário. A derivação de 600 mil iterações, feita entre o toque e o compartilhamento, pode estourar essa janela.
 - O formato `CART0` da página de teste é provisório. O formato definitivo do `.carteira` sai no marco 1.
 - A importação do app deve dizer por que recusou um arquivo: não é um backup, a senha está errada ou o arquivo foi alterado. Na v2, a falta disso deixou a segunda rodada sem conclusão.
+- No iPhone, o backup sai pelo menu Compartilhar, porque o `navigator.share` diz se o usuário concluiu ou cancelou. Assim, o app só grava a data do último backup quando ele foi salvo. O download fica como alternativa para navegadores sem compartilhamento de arquivos.
+- O app não escolhe a pasta do backup. A tela de backup orienta o usuário a escolher sempre a mesma pasta, como Downloads, na tela de salvar do iPhone.
 - A política do WebKit isenta da limpeza de 7 dias os apps abertos pela tela de início. A lista de aberturas permite conferir isso daqui a algumas semanas.
 
 ## Parâmetros fiscais "A confirmar"
@@ -177,5 +189,5 @@ Não alterei o SPEC. Se você aprovar, aplico estes ajustes:
 ## Pendências para fechar o marco 0
 
 - [x] Testes automáticos no iPhone: instalação, offline, armazenamento persistente, IndexedDB, cifra e CSP.
-- [ ] Testes de arquivo no iPhone, com a página v3: exportar pelo Compartilhar, exportar por download, importar backup e importar planilha.
+- [x] Testes de arquivo no iPhone, com a página v3: exportar pelo Compartilhar, exportar por download, importar backup e importar planilha.
 - [ ] Decidir sobre os ajustes no SPEC.md.
