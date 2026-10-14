@@ -179,7 +179,7 @@ Conferidos em 12/10/2026, no texto da lei no Planalto e no [Perguntas e Resposta
 
 ### Sugestões de ajuste no SPEC.md
 
-Não alterei o SPEC. Se você aprovar, aplico estes ajustes:
+Aprovados pelo dono do app e aplicados no SPEC.md em 13/10/2026:
 
 1. Na tabela de parâmetros fiscais, marcar as quatro linhas "A confirmar" como "Conferido em 10/2026", com as fontes acima, e acrescentar o caso de 30% dos ETFs de renda fixa.
 2. Em "Previdência", trocar "A exigência de contribuir ao INSS fica a confirmar" e "(a confirmar)" pelas regras confirmadas.
@@ -190,4 +190,6 @@ Não alterei o SPEC. Se você aprovar, aplico estes ajustes:
 
 - [x] Testes automáticos no iPhone: instalação, offline, armazenamento persistente, IndexedDB, cifra e CSP.
 - [x] Testes de arquivo no iPhone, com a página v3: exportar pelo Compartilhar, exportar por download, importar backup e importar planilha.
-- [ ] Decidir sobre os ajustes no SPEC.md.
+- [x] Decidir sobre os ajustes no SPEC.md.
+
+Marco 0 concluído em 13/10/2026.

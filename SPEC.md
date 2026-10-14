@@ -224,8 +224,8 @@ O módulo mostra quanto do saldo já é do participante e quanta dedução de IR
 ### Regras e avisos
 
 - A contrapartida vem antes de qualquer outro investimento. Se o plano aceitar contribuição maior com contrapartida, o app sinaliza.
-- A dedução exige declaração completa. A exigência de contribuir ao INSS fica a confirmar.
-- A contribuição da empresa não entra no limite de 12% (a confirmar).
+- A dedução exige declaração completa e contribuição ao INSS ou a regime próprio de previdência. Aposentados e pensionistas desses regimes estão dispensados dessa contribuição.
+- A contribuição da empresa não entra no limite de 12%, que vale só para o que o participante paga.
 - O aporte extra precisa estar concluído até 31 de dezembro. O app alerta a partir de outubro e recomenda fechar até o dia 26.
 - No resgate, o IR incide sobre o valor total, e não só sobre o rendimento.
 - No regime regressivo, a alíquota depende do tempo de cada contribuição. Resgatar antes de 2 anos paga 35%, então a previdência não conta como liquidez.
@@ -247,12 +247,12 @@ As regras fiscais ficam num único arquivo de parâmetros, com a data da confer�
 | JCP | 17,5% na fonte desde 01/2026 | Conferido em 10/2026 | [MyCapital](https://blog.mycapital.com.br/reforma-tributaria-2026-imposto-de-renda-investimentos/) |
 | FIIs | Rendimento isento se o fundo tiver 100 cotistas ou mais e o cotista, menos de 10% das cotas; ganho na venda 20% | Conferido em 10/2026 | [Renova Invest](https://renovainvest.com.br/blog/guia-definitivo-tabelas-ir-investimentos/) |
 | ETFs de renda variável | 15% sobre o ganho, sem a isenção de R$ 20 mil | Conferido em 10/2026 | [Renova Invest](https://renovainvest.com.br/blog/guia-definitivo-tabelas-ir-investimentos/) |
-| ETFs de renda fixa | 25%, 20% ou 15%, conforme o prazo médio da carteira do fundo | A confirmar |  |
-| Cripto em corretora no Brasil | Isenção se as vendas do mês somarem até R$ 35 mil; acima, 15% a 22,5% | A confirmar: fontes de 2026 divergem | [brapi](https://brapi.dev/blog/como-declarar-criptomoedas-imposto-renda-2026) |
-| ETFs de cripto na B3 | Mesma regra dos ETFs de renda variável | A confirmar |  |
+| ETFs de renda fixa | 25% se o prazo médio da carteira do fundo for de até 180 dias; 20% de 181 a 720; 15% acima de 720. Se o fundo não mantiver 75% em ativos do índice, 30%. Retido na fonte, sem come-cotas | Conferido em 10/2026 | [Lei 13.043/2014, art. 2º](https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l13043.htm) |
+| Cripto em corretora no Brasil | Isenção se as vendas do mês, somando todos os criptoativos, forem de até R$ 35 mil; acima, todo o ganho do mês paga de 15% a 22,5%, conforme o tamanho do ganho | Conferido em 10/2026 | [Lei 9.250/1995, art. 22](https://www.planalto.gov.br/ccivil_03/leis/l9250.htm), [Lei 8.981/1995, art. 21](https://www.planalto.gov.br/ccivil_03/leis/l8981.htm), [Perguntas e Respostas IRPF 2026](https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/perguntas-e-respostas/dirpf/p-r-irpf-2026-v1-00-2026-04-23.pdf) |
+| ETFs de cripto na B3 | Mesma regra dos ETFs de renda variável: 15% sobre o ganho, sem a isenção de R$ 20 mil | Conferido em 10/2026 | [Lei 11.033/2004, art. 3º](https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2004/lei/l11033.htm) |
 | PGBL: dedução | Até 12% da renda bruta tributável, na declaração completa, com aporte até 31/12 | Conferido em 10/2026 | [B3 Bora Investir](https://borainvestir.b3.com.br/objetivos-financeiros/investir-melhor/veja-prazo-para-usar-aporte-em-pgbl-para-pagar-menos-ir-ou-aumentar-restituicao/) |
 | PGBL: tabela regressiva | 35% até 2 anos, caindo 5 pontos a cada 2 anos, até 10% acima de 10 anos | Conferido em 10/2026 | [B3 Bora Investir](https://borainvestir.b3.com.br/objetivos-financeiros/investir-melhor/veja-prazo-para-usar-aporte-em-pgbl-para-pagar-menos-ir-ou-aumentar-restituicao/) |
-| PGBL: escolha do regime | Pode ser feita até o primeiro resgate ou benefício | A confirmar |  |
+| PGBL: escolha do regime | Pode ser feita até o benefício ou o primeiro resgate, e é irretratável | Conferido em 10/2026 | [Lei 14.803/2024](https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2024/lei/l14803.htm) |
 | FGC | R$ 250 mil por CPF e por conglomerado; teto de R$ 1 milhão a cada 4 anos. O projeto que eleva o limite aguarda despacho no Senado | Conferido em 10/2026 | [Contadores CNT](https://contadores.cnt.br/projetos/54/noticias/empresariais/2026/02/09/risco-bancario-em-debate-o-que-o-investidor-precisa-saber-sobre-o-fgc.html), [Senado](https://www25.senado.leg.br/web/atividade/materias/-/materia/174115) |
 | Tesouro Direto: custódia | 0,20% ao ano; isenta até R$ 10 mil no Tesouro Selic e no Tesouro Reserva | Conferido em 10/2026 | [InvestNews](https://investnews.com.br/financas/tesouro-direto-como-investir-todo-mes-a-partir-de-r-30) |
 | Tesouro Reserva | Rende a Selic, sem marcação a mercado, com resgate a qualquer hora. No lançamento, só pelo Banco do Brasil | Conferido em 10/2026 | [meutudo](https://meutudo.com.br/blog/noticias/2026/05/13/tesouro-reserva-rende-pela-selic-e-funciona-24h-veja-como-investir/) |
@@ -321,12 +321,14 @@ Uma rotina agendada baixa dados públicos uma vez por dia útil e publica arquiv
 
 | Dado | Fonte | Arquivo publicado | Situação |
 | --- | --- | --- | --- |
-| CDI diário, Selic meta, IPCA mensal e dólar PTAX | API de séries do Banco Central (SGS), pública e sem chave | `indices.json` | Fonte confirmada; formato a validar no marco 0 |
-| Taxas e preços dos títulos do Tesouro Direto, com histórico | [CSV aberto do Tesouro Transparente](https://www.tesourotransparente.gov.br/ckan/dataset/taxas-dos-titulos-ofertados-pelo-tesouro-direto), atualizado todo dia | `treasury.json` e `thermometer.json` | Fonte confirmada |
-| Fechamento de ações, FIIs, ETFs e BDRs | [Cotações históricas da B3](https://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dados/market-data/historico/mercado-a-vista/cotacoes-historicas/) (arquivo COTAHIST) | `b3.json` | Validar no marco 0 |
-| Feriados nacionais | Calendário da ANBIMA | `holidays.json` | Validar no marco 0 |
-| Cripto em reais | API pública de corretora, sem chave | `crypto.json` | Opcional; validar no marco 0 |
+| CDI e Selic diários, Selic meta, IPCA mensal e dólar PTAX | API de séries do Banco Central (SGS), pública e sem chave | `indices.json` | Validado no marco 0 |
+| Taxas e preços dos títulos do Tesouro Direto, com histórico | [CSV aberto do Tesouro Transparente](https://www.tesourotransparente.gov.br/ckan/dataset/taxas-dos-titulos-ofertados-pelo-tesouro-direto), atualizado todo dia | `treasury.json` e `thermometer.json` | Validado no marco 0 |
+| Fechamento de ações, FIIs, ETFs e BDRs | [Cotações históricas da B3](https://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dados/market-data/historico/mercado-a-vista/cotacoes-historicas/) (arquivo COTAHIST) | `b3.json` | Validado no marco 0 |
+| Feriados nacionais | Calendário da ANBIMA | `holidays.json` | Validado no marco 0 |
+| Cripto em reais | API pública do Mercado Bitcoin, com a Coinbase de reserva, sem chave | `crypto.json` | Opcional; validado no marco 0 |
 
+- **Tesouro Reserva:** não aparece no CSV do Tesouro Transparente. Como rende a Selic sem marcação a mercado, o app estima o saldo pela Selic diária (série 11 do SGS).
+- **Cripto:** a Binance ficou de fora porque bloqueia os servidores do GitHub. O resultado de cada fonte está em `docs/sources.md`.
 - **Agenda:** dias úteis à noite, fora da hora cheia. Exemplo em UTC: `17 1 * * 2-6`.
 - **Atividade:** a rotina grava os arquivos no repositório. O commit diário mantém a agenda ativa, porque o [GitHub desativa agendas](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows) após 60 dias sem atividade.
 - **Falha de fonte:** o arquivo anterior é mantido e `meta.json` marca a fonte como atrasada. A rotina nunca derruba a publicação.
@@ -418,11 +420,11 @@ Estes pontos dependem do dono do app e não travam o marco 0.
 - [ ] Previdência: confirmar se a carência tem degraus entre o terceiro e o nono ano.
 - [x] Definir a conta do GitHub.
 - [x] Definir se o bloqueio por senha vem ligado.
-- [ ] Reconferir os itens "A confirmar" dos parâmetros fiscais.
+- [x] Reconferir os itens "A confirmar" dos parâmetros fiscais.
 
 ## Fontes
 
-Páginas abertas em 10 e 11 de outubro de 2026.
+Páginas abertas entre 10 e 12 de outubro de 2026.
 
 - [Reforma tributária 2026 e o IR dos investimentos, MyCapital](https://blog.mycapital.com.br/reforma-tributaria-2026-imposto-de-renda-investimentos/)
 - [Tabelas de IR em investimentos, Renova Invest](https://renovainvest.com.br/blog/guia-definitivo-tabelas-ir-investimentos/)
@@ -439,3 +441,10 @@ Páginas abertas em 10 e 11 de outubro de 2026.
 - [GitHub Actions: eventos e agenda](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows)
 - [GitHub Actions: cobrança](https://docs.github.com/en/billing/concepts/product-billing/github-actions)
 - [Política de armazenamento do WebKit](https://webkit.org/blog/14403/updates-to-storage-policy/)
+- [Lei 13.043/2014, ETFs de renda fixa, Planalto](https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l13043.htm)
+- [Lei 9.250/1995, isenção de pequeno valor, Planalto](https://www.planalto.gov.br/ccivil_03/leis/l9250.htm)
+- [Lei 8.981/1995, alíquotas do ganho de capital, Planalto](https://www.planalto.gov.br/ccivil_03/leis/l8981.htm)
+- [Lei 11.033/2004, renda variável, Planalto](https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2004/lei/l11033.htm)
+- [Lei 9.532/1997, dedução da previdência, Planalto](https://www.planalto.gov.br/ccivil_03/leis/l9532.htm)
+- [Lei 14.803/2024, escolha do regime, Planalto](https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2024/lei/l14803.htm)
+- [Perguntas e Respostas IRPF 2026, Receita Federal](https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/perguntas-e-respostas/dirpf/p-r-irpf-2026-v1-00-2026-04-23.pdf)
