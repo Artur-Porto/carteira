@@ -9,6 +9,8 @@ on:
       - 'src/**'
       - 'public/**'
       - 'tests/**'
+      - 'pipeline/lib.ts'
+      - 'pipeline/parse.ts'
       - 'index.html'
       - 'package.json'
       - 'package-lock.json'

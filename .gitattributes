@@ -1,0 +1,3 @@
+# Every text file uses LF line endings, also when edited on Windows.
+* text=auto eol=lf
+*.png binary

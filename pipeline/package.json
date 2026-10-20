@@ -6,7 +6,9 @@
     "node": ">=22.18"
   },
   "scripts": {
-    "probe": "node probe.ts"
+    "probe": "node probe.ts",
+    "update": "node update.ts",
+    "update:full": "node update.ts --full"
   },
   "dependencies": {
     "fflate": "0.8.2",
