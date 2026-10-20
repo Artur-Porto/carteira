@@ -3,6 +3,10 @@ import { useEffect, useState } from 'react';
 import { db } from '../../data/instance';
 import { eraseAll, updateSettings } from '../../data/settings';
 import { loadDemo } from '../../demo/demo';
+import { formatDate, formatDateTime } from '../format';
+import { useMarket, useToday } from '../hooks';
+import { SOURCE_LABELS, freshness } from '../marketStatus';
+import { syncMarket } from '../marketSync';
 import { ensurePersistence, storageStatus, type StorageStatus } from '../storage';
 import { BackupPanel } from './BackupPanel';
 import { RestorePanel } from './RestorePanel';
@@ -35,6 +39,70 @@ function DemoSection({ demo }: { demo: boolean }) {
             Carregar dados fictícios
           </button>
         ))}
+    </section>
+  );
+}
+
+function MarketSection() {
+  const m = useMarket();
+  const today = useToday();
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  if (!m) return null;
+  const sources = freshness(m.files, m.market, today);
+  const checked = m.rows.find(r => r.name === 'meta')?.fetchedAt;
+
+  async function update() {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const result = await syncMarket(true)!;
+      setMessage(
+        result.failed.length > 0
+          ? 'Alguns arquivos não vieram. Tente de novo mais tarde.'
+          : result.updated.length > 0
+            ? 'Dados de mercado atualizados.'
+            : 'Já estavam atualizados.',
+      );
+    } catch {
+      setMessage('Sem conexão com o servidor do app. Tente de novo mais tarde.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="card" aria-labelledby="market-title">
+      <h2 id="market-title">Dados de mercado</h2>
+      {sources.every(s => s.asOf === null) ? (
+        <p>Ainda não há dados de mercado neste aparelho.</p>
+      ) : (
+        <dl className="rows">
+          {sources.map(s => (
+            <div key={s.source}>
+              <dt>{SOURCE_LABELS[s.source]}</dt>
+              <dd>
+                {s.asOf ? formatDate(s.asOf) : 'sem dados'}
+                {s.asOf && s.stale && ' · desatualizado'}
+                {s.late && ' · fonte atrasada'}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {checked && <p className="muted small">Conferido em {formatDateTime(checked)}.</p>}
+      <p className="muted small">
+        Os arquivos trazem o mercado inteiro, não só o que você tem, e vêm do próprio endereço do app. A rotina publica dados
+        novos toda noite de dia útil.
+      </p>
+      <button type="button" className="button" disabled={busy} onClick={() => void update()}>
+        {busy ? 'Atualizando…' : 'Atualizar agora'}
+      </button>
+      {message && (
+        <p role="status" className="muted">
+          {message}
+        </p>
+      )}
     </section>
   );
 }
@@ -103,10 +171,7 @@ export function Settings() {
         </button>
       </section>
       <DemoSection demo={settings.demoData} />
-      <section className="card" aria-labelledby="market-title">
-        <h2 id="market-title">Dados de mercado</h2>
-        <p className="muted">Ainda não há dados de mercado. A rotina que traz preços e taxas chega no marco 2.</p>
-      </section>
+      <MarketSection />
       <StorageSection />
       <EraseSection />
       <section className="card" aria-labelledby="about-title">

@@ -5,10 +5,18 @@ import { updateSettings } from '../data/settings';
 import { BackIcon, ChecklistIcon, EyeIcon, HomeIcon, MoreIcon, PlusIcon, WalletIcon } from './components/icons';
 import { Planned } from './components/Planned';
 import { DiscreetContext } from './discreet';
-import { MORE_ROUTES, TITLES, hrefFor, useRoute, type Route } from './routes';
+import { describe, goBack, hrefFor, useScreen, type Route, type Screen } from './routes';
 import { Home } from './screens/Home';
 import { More } from './screens/More';
+import { MovementForm } from './screens/MovementForm';
+import { Onboarding } from './screens/Onboarding';
+import { Pension } from './screens/Pension';
+import { PensionBalanceForm, PensionPlanForm } from './screens/PensionForms';
 import { Portfolio } from './screens/Portfolio';
+import { PositionDetail } from './screens/PositionDetail';
+import { PositionForm } from './screens/PositionForm';
+import { ReconcileForm } from './screens/ReconcileForm';
+import { Reserve } from './screens/Reserve';
 import { Settings } from './screens/Settings';
 import { Welcome } from './screens/Welcome';
 
@@ -20,8 +28,8 @@ const TABS = [
   { route: 'mais', label: 'Mais', icon: <MoreIcon /> },
 ] as const satisfies readonly { route: Route; label: string; icon: ReactNode }[];
 
-function screen(route: Route): ReactNode {
-  switch (route) {
+function render(screen: Screen): ReactNode {
+  switch (screen.name) {
     case 'inicio':
       return <Home />;
     case 'carteira':
@@ -30,6 +38,26 @@ function screen(route: Route): ReactNode {
       return <More />;
     case 'ajustes':
       return <Settings />;
+    case 'reserva':
+      return <Reserve />;
+    case 'previdencia':
+      return <Pension />;
+    case 'novaPosicao':
+      return <PositionForm key={`nova-${screen.bucket}`} bucket={screen.bucket} />;
+    case 'posicao':
+      return <PositionDetail id={screen.id} />;
+    case 'editarPosicao':
+      return <PositionForm key={screen.id} id={screen.id} />;
+    case 'movimento':
+      return <MovementForm positionId={screen.positionId} transactionId={screen.transactionId} />;
+    case 'conciliar':
+      return <ReconcileForm positionId={screen.positionId} />;
+    case 'plano':
+      return <PensionPlanForm id={screen.id} />;
+    case 'saldoPlano':
+      return <PensionBalanceForm planId={screen.planId} />;
+    case 'roteiro':
+      return <Onboarding step={screen.step} />;
     case 'aporte':
       return (
         <Planned milestone="3">
@@ -42,14 +70,6 @@ function screen(route: Route): ReactNode {
         <Planned milestone="4 e 7">
           Checklist do mês, diário de decisões com as revisões pendentes, tese de cada ativo de renda variável e boletim de
           disciplina.
-        </Planned>
-      );
-    case 'reserva':
-      return <Planned milestone="2">Saldos da reserva, rendimento estimado pelo CDI e conciliação com o saldo do banco.</Planned>;
-    case 'previdencia':
-      return (
-        <Planned milestone="2 e 5">
-          Parte própria e da empresa, carência, saldo garantido e simulador da dedução do PGBL.
         </Planned>
       );
     case 'politica':
@@ -90,27 +110,35 @@ function screen(route: Route): ReactNode {
 
 export function App() {
   const settings = useLiveQuery(() => db.settings.get('settings'));
-  const route = useRoute();
+  const screen = useScreen();
+  const { title, tab, parent } = describe(screen);
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [route]);
+  }, [screen]);
 
   if (!settings) return null;
   if (!settings.onboardedAt) return <Welcome />;
 
-  const tab: Route = (MORE_ROUTES as readonly Route[]).includes(route) ? 'mais' : route;
   const hidden = settings.discreetMode;
   return (
     <DiscreetContext.Provider value={hidden}>
       <header className="topbar">
-        {tab === 'mais' && route !== 'mais' ? (
-          <a className="icon-button" href={hrefFor('mais')} aria-label="Voltar">
+        {parent ? (
+          <a
+            className="icon-button"
+            href={parent}
+            aria-label="Voltar"
+            onClick={e => {
+              e.preventDefault();
+              goBack(parent);
+            }}
+          >
             <BackIcon />
           </a>
         ) : (
           <span />
         )}
-        <h1>{TITLES[route]}</h1>
+        <h1>{title}</h1>
         <button
           type="button"
           className="icon-button"
@@ -121,7 +149,7 @@ export function App() {
           <EyeIcon crossed={hidden} />
         </button>
       </header>
-      <main className="screen">{screen(route)}</main>
+      <main className="screen">{render(screen)}</main>
       <nav className="tabbar" aria-label="Navegação principal">
         {TABS.map(t => (
           <a key={t.route} href={hrefFor(t.route)} aria-current={tab === t.route ? 'page' : undefined}>

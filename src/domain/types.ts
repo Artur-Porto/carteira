@@ -40,6 +40,9 @@ export const INSTRUMENT_TYPES = [
   'TesouroPrefixadoJuros',
   'TesouroIPCA',
   'TesouroIPCAJuros',
+  'TesouroEducaMais',
+  'TesouroRendaMais',
+  'TesouroIGPMJuros',
   'Acao',
   'FII',
   'ETF',
@@ -47,6 +50,29 @@ export const INSTRUMENT_TYPES = [
   'Cripto',
 ] as const;
 export type InstrumentType = (typeof INSTRUMENT_TYPES)[number];
+
+/** Fixed income kept by amount: deposits accrue by the indexer and withdrawals take the oldest first. */
+export const AMOUNT_INSTRUMENTS = ['CDB', 'RDB', 'LCI', 'LCA', 'TesouroReserva'] as const satisfies readonly InstrumentType[];
+/** Tesouro Direto bonds held in units and valued by the day's unit price. */
+export const PRICED_BONDS = [
+  'TesouroSelic',
+  'TesouroPrefixado',
+  'TesouroPrefixadoJuros',
+  'TesouroIPCA',
+  'TesouroIPCAJuros',
+  'TesouroEducaMais',
+  'TesouroRendaMais',
+  'TesouroIGPMJuros',
+] as const satisfies readonly InstrumentType[];
+/** Assets traded in units at market prices, whose cost is the average cost. */
+export const MARKET_INSTRUMENTS = ['Acao', 'FII', 'ETF', 'BDR', 'Cripto'] as const satisfies readonly InstrumentType[];
+
+export type InstrumentFamily = 'amount' | 'bond' | 'market';
+export function instrumentFamily(type: InstrumentType): InstrumentFamily {
+  if ((AMOUNT_INSTRUMENTS as readonly InstrumentType[]).includes(type)) return 'amount';
+  if ((PRICED_BONDS as readonly InstrumentType[]).includes(type)) return 'bond';
+  return 'market';
+}
 
 export const INDEXERS = ['CDI', 'SELIC', 'IPCA', 'PRE'] as const;
 export type Indexer = (typeof INDEXERS)[number];
@@ -120,6 +146,10 @@ export interface Institution extends Entity {
   fgcCovered: boolean;
 }
 
+/**
+ * What the owner holds and how it earns. Quantity, cost and lots are not stored: they come from
+ * the position's transactions (see domain/valuation.ts), so they can never disagree with them.
+ */
 export interface Position extends Entity {
   bucket: Bucket;
   assetClass: AssetClass;
@@ -128,24 +158,21 @@ export interface Position extends Entity {
   name: string;
   institutionId: string | null;
   indexer: Indexer | null;
-  /** Percent of CDI, real rate over IPCA, or fixed rate, depending on the indexer. */
+  /**
+   * Percent of the CDI ("110"), spread over the Selic ("0.05"), real rate over the IPCA
+   * ("7.20") or fixed rate ("12.30"), all per year, depending on the indexer.
+   */
   rate: Decimal | null;
   startDate: IsoDate | null;
   maturityDate: IsoDate | null;
   liquidity: Liquidity;
   ticker: string | null;
-  quantity: Decimal | null;
-  costBasisCents: Cents;
 }
 
-/** One purchase or deposit; drives income tax by holding period and the average cost. */
-export interface Lot extends Entity {
-  positionId: string;
-  date: IsoDate;
-  amountCents: Cents;
-  quantity: Decimal | null;
-}
-
+/**
+ * A movement. Amounts are gross: a buy or deposit is what was applied, without fees; a sell or
+ * withdrawal is what left the position, before taxes; income is what was received.
+ */
 export interface Transaction extends Entity {
   date: IsoDate;
   type: TransactionType;
@@ -154,6 +181,16 @@ export interface Transaction extends Entity {
   quantity: Decimal | null;
   feesCents: Cents;
   note: string;
+}
+
+/**
+ * The balance the bank showed on a date (SPEC, "Rendimento da reserva": the app records the
+ * difference). From then on the estimate follows the bank, lot by lot.
+ */
+export interface Reconciliation extends Entity {
+  positionId: string;
+  date: IsoDate;
+  balanceCents: Cents;
 }
 
 export interface VestingStep {

@@ -15,10 +15,10 @@ import {
   type ContributionPlan,
   type DecisionLog,
   type Institution,
-  type Lot,
   type PensionPlan,
   type Policy,
   type Position,
+  type Reconciliation,
   type Thesis,
   type Transaction,
 } from '../domain/types';
@@ -89,17 +89,6 @@ export const positionSchema: z.ZodType<Position> = z.strictObject({
   maturityDate: isoDate.nullable(),
   liquidity: z.enum(LIQUIDITIES),
   ticker: text(20).nullable(),
-  quantity: decimal.nullable(),
-  costBasisCents: cents,
-  ...timestamps,
-});
-
-export const lotSchema: z.ZodType<Lot> = z.strictObject({
-  id,
-  positionId: id,
-  date: isoDate,
-  amountCents: cents,
-  quantity: decimal.nullable(),
   ...timestamps,
 });
 
@@ -112,6 +101,14 @@ export const transactionSchema: z.ZodType<Transaction> = z.strictObject({
   quantity: decimal.nullable(),
   feesCents: cents,
   note: text(2000),
+  ...timestamps,
+});
+
+export const reconciliationSchema: z.ZodType<Reconciliation> = z.strictObject({
+  id,
+  positionId: id,
+  date: isoDate,
+  balanceCents: cents,
   ...timestamps,
 });
 
@@ -161,8 +158,8 @@ export const tablesSchema: z.ZodType<Tables> = z.strictObject({
   policies: z.array(policySchema).max(1),
   institutions: z.array(institutionSchema),
   positions: z.array(positionSchema),
-  lots: z.array(lotSchema),
   transactions: z.array(transactionSchema),
+  reconciliations: z.array(reconciliationSchema),
   pensionPlans: z.array(pensionPlanSchema),
   contributionPlans: z.array(contributionPlanSchema),
   decisionLogs: z.array(decisionLogSchema),

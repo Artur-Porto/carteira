@@ -5,6 +5,7 @@ import { db } from './data/instance';
 import { removeProbeLeftovers } from './data/legacy';
 import { ensureSettings } from './data/settings';
 import { App } from './ui/App';
+import { startMarketSync } from './ui/marketSync';
 import { ensurePersistence } from './ui/storage';
 import './ui/styles.css';
 
@@ -14,12 +15,14 @@ void ensurePersistence();
 
 const root = createRoot(document.getElementById('root')!);
 ensureSettings(db).then(
-  () =>
+  () => {
     root.render(
       <StrictMode>
         <App />
       </StrictMode>,
-    ),
+    );
+    startMarketSync();
+  },
   () =>
     root.render(
       <p className="fatal">

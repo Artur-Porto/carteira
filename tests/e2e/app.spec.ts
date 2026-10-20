@@ -79,10 +79,40 @@ test('a file that is not a backup is refused with the reason', async ({ page }) 
   await expect(panel.getByText('Este arquivo não é um backup da Carteira.')).toBeVisible();
 });
 
-test('starting from zero shows an empty portfolio', async ({ page }) => {
+test('starting from zero goes through the first steps', async ({ page }) => {
   await page.goto('./');
   await page.getByRole('button', { name: 'Começar do zero' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Primeiros passos' })).toBeVisible();
+
+  await page.getByLabel('Custo de vida mensal').fill('6.000,00');
+  await page.getByRole('button', { name: 'Continuar' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Onde está a sua reserva?' })).toBeVisible();
+  await page.getByLabel('Nome').fill('Cofrinho de teste');
+  await page.getByLabel('Banco').fill('Banco Fictício C');
+  await page.getByLabel('Saldo de hoje').fill('10.000,00');
+  await page.getByRole('button', { name: 'Adicionar à reserva' }).click();
+  await expect(page.getByText('Cofrinho de teste')).toBeVisible();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Previdência da empresa' })).toBeVisible();
+  await page.getByRole('link', { name: 'Concluir' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Início' })).toBeVisible();
   await expect(page.getByText('Nenhum backup salvo ainda.')).toBeVisible();
+  // R$ 10.000,00 applied today, for a monthly cost of R$ 6.000,00.
+  await expect(page.getByText('1,6 meses')).toBeVisible();
+
+  await openTab(page, 'Carteira', 'Carteira');
+  await expect(page.getByText('Cofrinho de teste')).toBeVisible();
+});
+
+test('skipping every first step leaves an empty portfolio', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Começar do zero' }).click();
+  await page.getByRole('button', { name: 'Pular' }).click();
+  await page.getByRole('button', { name: 'Pular' }).click();
+  await page.getByRole('link', { name: 'Concluir' }).click();
+  await expect(page.getByText('O custo de vida mensal ainda não foi informado.')).toBeVisible();
   await openTab(page, 'Carteira', 'Carteira');
   await expect(page.getByText('Nenhuma posição ainda.')).toBeVisible();
 });

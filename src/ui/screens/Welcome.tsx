@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { db } from '../../data/instance';
 import { startEmpty } from '../../data/settings';
 import { loadDemo } from '../../demo/demo';
-import { hrefFor } from '../routes';
+import { guideHref, hrefFor } from '../routes';
 import { RestorePanel } from './RestorePanel';
 
 const goHome = () => window.location.replace(hrefFor('inicio'));
 
-/** First launch, and the screen after everything is erased. Every way out lands on Início. */
+/**
+ * First launch, and the screen after everything is erased. Starting from zero opens the short
+ * guide (SPEC, "Telas"); the other ways out land on Início.
+ */
 export function Welcome() {
   const [busy, setBusy] = useState(false);
   const [restoring, setRestoring] = useState(false);
@@ -16,7 +19,8 @@ export function Welcome() {
     setBusy(true);
     try {
       await (withDemo ? loadDemo(db) : startEmpty(db));
-      goHome();
+      if (withDemo) goHome();
+      else window.location.replace(guideHref(0));
     } finally {
       setBusy(false);
     }

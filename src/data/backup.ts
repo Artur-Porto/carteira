@@ -25,6 +25,33 @@ const payloadSchema: z.ZodType<BackupPayload> = z.strictObject({
 });
 const envelopeSchema = z.object({ type: z.literal(BACKUP_TYPE), schemaVersion: z.int() });
 
+type Json = Record<string, unknown>;
+const isObject = (value: unknown): value is Json => typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * Schema version 1 (milestone 1) stored lots and each position's quantity and cost, which
+ * version 2 derives from the transactions. The transactions already hold that information.
+ */
+function migrateTablesV1(tables: unknown): unknown {
+  if (!isObject(tables)) return tables;
+  const { lots: _lots, ...rest } = tables;
+  const positions = Array.isArray(rest['positions'])
+    ? rest['positions'].map(p => {
+        if (!isObject(p)) return p;
+        const { quantity: _quantity, costBasisCents: _cost, ...position } = p;
+        return position;
+      })
+    : rest['positions'];
+  return { ...rest, positions, reconciliations: [] };
+}
+
+/** Brings the tables of an older backup to the current schema, one version at a time. */
+function migrate(json: Json, from: number): Json {
+  let tables = json['tables'];
+  if (from < 2) tables = migrateTablesV1(tables);
+  return { ...json, tables };
+}
+
 /**
  * Encrypts every table as the device will be once this backup is saved: the settings row
  * already records it, so restoring the file gives back exactly that state.
@@ -53,10 +80,9 @@ export async function openBackup(file: Uint8Array<ArrayBuffer>, password: string
     throw new BackupError('invalid');
   }
   const envelope = envelopeSchema.safeParse(json);
-  if (!envelope.success) throw new BackupError('invalid');
+  if (!envelope.success || !isObject(json)) throw new BackupError('invalid');
   if (envelope.data.schemaVersion > SCHEMA_VERSION) throw new BackupError('newer-schema');
-  // Backups from older schema versions are migrated here once a second version exists.
-  const payload = payloadSchema.safeParse(json);
+  const payload = payloadSchema.safeParse(migrate(json, envelope.data.schemaVersion));
   if (!payload.success) throw new BackupError('invalid');
   return payload.data;
 }

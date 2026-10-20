@@ -35,7 +35,10 @@ export async function eraseEverything(page: Page) {
   await expect(page.getByRole('button', { name: 'Explorar com dados fictícios' })).toBeVisible();
 }
 
-/** Every object store of the app's IndexedDB, read without going through the app. */
+/**
+ * Every object store of the app's IndexedDB that holds the owner's data, read without going
+ * through the app. The public market files are left out: they are not part of the backup.
+ */
 export function dumpDatabase(page: Page): Promise<Record<string, unknown[]>> {
   return page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
@@ -44,7 +47,7 @@ export function dumpDatabase(page: Page): Promise<Record<string, unknown[]>> {
       req.onerror = () => reject(req.error);
     });
     const out: Record<string, unknown[]> = {};
-    for (const name of Array.from(db.objectStoreNames)) {
+    for (const name of Array.from(db.objectStoreNames).filter(n => n !== 'market')) {
       out[name] = await new Promise<unknown[]>((resolve, reject) => {
         const req = db.transaction(name).objectStore(name).getAll();
         req.onsuccess = () => resolve(req.result);
@@ -54,4 +57,28 @@ export function dumpDatabase(page: Page): Promise<Record<string, unknown[]>> {
     db.close();
     return out;
   });
+}
+
+/** Waits until the app stored the market files it downloads on launch. */
+export async function waitForMarketData(page: Page) {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          new Promise<number>(resolve => {
+            const req = indexedDB.open('carteira');
+            req.onsuccess = () => {
+              const db = req.result;
+              if (!db.objectStoreNames.contains('market')) return resolve(0);
+              const count = db.transaction('market').objectStore('market').count();
+              count.onsuccess = () => {
+                resolve(count.result);
+                db.close();
+              };
+            };
+            req.onerror = () => resolve(0);
+          }),
+      ),
+    )
+    .toBeGreaterThan(1);
 }

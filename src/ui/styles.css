@@ -321,3 +321,190 @@ a {
 .fatal {
   padding: 24px;
 }
+
+/* Lists whose rows open a screen. */
+.rows > li > .row-link {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.rows > li > .row-link > svg {
+  flex: none;
+  color: var(--muted);
+}
+
+.rows .amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: auto;
+  text-align: right;
+}
+
+.tag {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 1px 8px;
+  background: var(--notice-bg);
+  color: var(--notice-text);
+  border-radius: 8px;
+}
+
+.card h2.split {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+details.card > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Forms. */
+.form h2 {
+  margin-top: 0;
+}
+
+.field select,
+.field input[type='date'] {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 4px;
+  padding: 8px 12px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.field input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.hint {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.field-error {
+  display: block;
+  margin-top: 4px;
+  color: var(--danger);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  margin: 6px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.check input {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  accent-color: var(--accent);
+}
+
+fieldset.group {
+  margin: 16px 0;
+  padding: 4px 14px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+fieldset.group legend {
+  padding: 0 6px;
+  font-weight: 700;
+}
+
+.inline-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.inline-fields .field {
+  margin-bottom: 0;
+}
+
+.icon-text-button,
+.link-button {
+  min-height: 44px;
+  padding: 0 4px;
+  background: none;
+  border: 0;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.link-button {
+  min-height: 0;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.button.small-button {
+  width: auto;
+  min-height: 44px;
+  margin: 0;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+}
+
+.rows > li > .confirm {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* First-launch guide. */
+.steps {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.steps li {
+  flex: 1;
+  padding: 6px 4px;
+  border-bottom: 3px solid var(--border);
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.steps li[aria-current='step'] {
+  border-color: var(--accent);
+  color: var(--text);
+  font-weight: 700;
+}

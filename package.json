@@ -1,7 +1,7 @@
 {
   "name": "carteira",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Carteira de investimentos pessoal para iPhone. Os dados ficam só no aparelho.",
   "type": "module",
   "engines": {
@@ -16,6 +16,7 @@
     "e2e": "vite build && playwright test"
   },
   "dependencies": {
+    "decimal.js": "^10.6.0",
     "dexie": "^4.4.6",
     "dexie-react-hooks": "^4.4.0",
     "react": "^19.3.0",

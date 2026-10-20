@@ -1,6 +1,6 @@
 // SPEC, privacy rule 9: the test fails if the app tries any request outside its own origin.
 import { expect, test } from '@playwright/test';
-import { PASSWORD, downloadBackup, eraseEverything, openTab, startWithDemo } from './helpers';
+import { PASSWORD, downloadBackup, eraseEverything, openTab, startWithDemo, waitForMarketData } from './helpers';
 
 // Routing does not see requests a service worker answers, so this file runs without one.
 test.use({ serviceWorkers: 'block' });
@@ -15,15 +15,21 @@ test('a full session never leaves the origin', async ({ page, context, baseURL }
       return route.abort();
     },
   );
-  // Requests the CSP stops never reach the network, so violations are collected too.
+  // Requests the CSP stops never reach the network, so violations are collected too. A blocked
+  // style attribute is not a request: WebKit reports one for every <select>, even a plain one
+  // with no script around it (docs/marco-2.md). The app's own code never writes style attributes;
+  // tests/unit/csp.test.ts checks that.
   await context.addInitScript(() => {
     document.addEventListener('securitypolicyviolation', e => {
+      if (e.violatedDirective === 'style-src-attr') return;
       const seen = JSON.parse(sessionStorage.getItem('csp-violations') ?? '[]') as string[];
       sessionStorage.setItem('csp-violations', JSON.stringify([...seen, `${e.violatedDirective} ${e.blockedURI}`]));
     });
   });
 
   await startWithDemo(page);
+  // The market files come from the app's own address.
+  await waitForMarketData(page);
   await page.getByRole('button', { name: 'Ocultar valores' }).click();
   await page.getByRole('button', { name: 'Mostrar valores' }).click();
   for (const [label, title] of [
@@ -34,6 +40,21 @@ test('a full session never leaves the origin', async ({ page, context, baseURL }
   ] as const) {
     await openTab(page, label, title);
   }
+  for (const title of ['Reserva', 'Previdência']) {
+    await openTab(page, 'Mais', 'Mais');
+    await page.getByRole('link', { name: new RegExp(`^${title}`) }).click();
+    await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
+  }
+  await openTab(page, 'Carteira', 'Carteira');
+  await page.getByRole('link', { name: /ETF do Ibovespa/ }).click();
+  await expect(page.getByRole('heading', { name: 'ETF do Ibovespa' })).toBeVisible();
+  await page.getByRole('link', { name: 'Registrar movimentação' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Nova movimentação' })).toBeVisible();
+  await page.goto('./#/carteira/nova');
+  await expect(page.getByRole('heading', { level: 1, name: 'Nova posição' })).toBeVisible();
+  await page.goto('./#/ajustes');
+  await page.getByRole('button', { name: 'Atualizar agora' }).click();
+  await expect(page.getByRole('status')).toBeVisible();
   const backup = await downloadBackup(page);
   await eraseEverything(page);
   await page.getByRole('button', { name: 'Restaurar um backup' }).click();

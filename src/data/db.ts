@@ -4,13 +4,14 @@ import type {
   ContributionPlan,
   DecisionLog,
   Institution,
-  Lot,
   PensionPlan,
   Policy,
   Position,
+  Reconciliation,
   Thesis,
   Transaction,
 } from '../domain/types';
+import type { MarketFileName } from '../market/files';
 
 /** Every table holding the owner's data, in backup order. */
 export interface Tables {
@@ -18,8 +19,8 @@ export interface Tables {
   policies: Policy[];
   institutions: Institution[];
   positions: Position[];
-  lots: Lot[];
   transactions: Transaction[];
+  reconciliations: Reconciliation[];
   pensionPlans: PensionPlan[];
   contributionPlans: ContributionPlan[];
   decisionLogs: DecisionLog[];
@@ -32,25 +33,37 @@ export const TABLES = [
   'policies',
   'institutions',
   'positions',
-  'lots',
   'transactions',
+  'reconciliations',
   'pensionPlans',
   'contributionPlans',
   'decisionLogs',
   'theses',
 ] as const satisfies readonly TableName[];
 
+/**
+ * A public market file as last downloaded. It is not the owner's data, so it stays out of the
+ * backup and the app downloads it again when needed.
+ */
+export interface MarketRow {
+  name: MarketFileName;
+  asOf: string;
+  /** When the data routine refreshed the file, from meta.json. */
+  updatedAt: string | null;
+  fetchedAt: string;
+  data: unknown;
+}
+
 export type CarteiraDb = Dexie & {
   [K in TableName]: EntityTable<Tables[K][number], 'id'>;
-};
+} & { market: EntityTable<MarketRow, 'name'> };
 
 /** Version of the stored data; backups carry it so a restore can migrate older ones. */
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export function openDb(name = 'carteira'): CarteiraDb {
   const db = new Dexie(name) as CarteiraDb;
-  // Version 1, milestone 1. Later versions are added below with an upgrade step; this one
-  // never changes.
+  // Each version stays as it was; a new one lists only what changes, with its upgrade step.
   db.version(1).stores({
     settings: 'id',
     policies: 'id',
@@ -63,6 +76,19 @@ export function openDb(name = 'carteira'): CarteiraDb {
     decisionLogs: 'id, date, type',
     theses: 'id, positionId',
   });
+  // Version 2, milestone 2: lots and the position's quantity and cost come from the transactions
+  // (domain/valuation.ts); bank balances are reconciliations; market files are kept for offline use.
+  db.version(2)
+    .stores({ lots: null, reconciliations: 'id, positionId, date', market: 'name' })
+    .upgrade(tx =>
+      tx
+        .table('positions')
+        .toCollection()
+        .modify((p: Record<string, unknown>) => {
+          delete p['quantity'];
+          delete p['costBasisCents'];
+        }),
+    );
   return db;
 }
 
