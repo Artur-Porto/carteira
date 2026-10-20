@@ -240,9 +240,9 @@ As regras fiscais ficam num único arquivo de parâmetros, com a data da confer�
 
 | Regra | Valor | Situação | Fonte |
 | --- | --- | --- | --- |
-| IR da renda fixa (CDB, Tesouro) | 22,5% até 180 dias; 20% de 181 a 360; 17,5% de 361 a 720; 15% acima de 720 | Conferido em 10/2026 | [MyCapital](https://blog.mycapital.com.br/reforma-tributaria-2026-imposto-de-renda-investimentos/) |
-| IOF em resgate antes de 30 dias | Regressivo, zera no 30º dia | Conferido em 10/2026 | [Renova Invest](https://renovainvest.com.br/blog/guia-definitivo-tabelas-ir-investimentos/) |
-| LCI, LCA, CRI, CRA e debêntures incentivadas | Isentos para pessoa física. O governo voltou a defender tributação em 09/2026, sem lei aprovada | Conferido em 10/2026 | [MyCapital](https://blog.mycapital.com.br/reforma-tributaria-2026-imposto-de-renda-investimentos/) |
+| IR da renda fixa (CDB, Tesouro) | 22,5% até 180 dias; 20% de 181 a 360; 17,5% de 361 a 720; 15% acima de 720. A MP 1.303/2025, que mudaria a tabela, perdeu a vigência | Conferido em fonte oficial em 19/10/2026 | [Lei 11.033/2004, art. 1º](https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2004/lei/l11033.htm) |
+| IOF em resgate antes de 30 dias | Regressivo: 96% do rendimento no 1º dia, até 3% no 29º e zero a partir do 30º. A LCA tem alíquota zero | Conferido em fonte oficial em 19/10/2026 | [Decreto 6.306/2007, art. 32 e Anexo](https://www.planalto.gov.br/ccivil_03/_ato2007-2010/2007/decreto/d6306.htm) |
+| LCI, LCA, CRI, CRA e debêntures incentivadas | Isentos para pessoa física. O governo voltou a defender tributação em 09/2026, sem lei aprovada | LCI, LCA, CRI e CRA conferidas em fonte oficial em 19/10/2026; o resto em 10/2026 | [Lei 11.033/2004, art. 3º, II e IV](https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2004/lei/l11033.htm), [MyCapital](https://blog.mycapital.com.br/reforma-tributaria-2026-imposto-de-renda-investimentos/) |
 | Prazo mínimo de LCI e LCA pós-fixadas | 6 meses | Conferido em 10/2026 | [Renova Invest](https://renovainvest.com.br/blog/guia-definitivo-tabelas-ir-investimentos/) |
 | Ações | 15% sobre o lucro; isenção se as vendas do mês somarem até R$ 20 mil; day trade 20% | Conferido em 10/2026 | [MyCapital](https://blog.mycapital.com.br/reforma-tributaria-2026-imposto-de-renda-investimentos/) |
 | Dividendos | Isentos até R$ 50 mil por mês por empresa; acima disso, 10% na fonte | Conferido em 10/2026 | [MyCapital](https://blog.mycapital.com.br/reforma-tributaria-2026-imposto-de-renda-investimentos/) |
@@ -293,14 +293,15 @@ Tudo fica em IndexedDB, em tabelas versionadas e com migração entre versões.
 | --- | --- |
 | `Policy` | `reserveMonths`, `monthlyCost`, `targets[]`, `bands`, `limits`, `scenarios[]`, `tiltEnabled`, `maxDrawdown` |
 | `Institution` | `name`, `conglomerate`, `fgcCovered` |
-| `Position` | `bucket`, `assetClass`, `instrumentType`, `institutionId`, `indexer`, `rate`, `startDate`, `maturityDate`, `liquidity`, `ticker`, `quantity`, `costBasis` |
-| `Lot` | `positionId`, `date`, `amount`, `quantity`. Serve ao IR por prazo e ao custo médio |
+| `Position` | `bucket`, `assetClass`, `instrumentType`, `name`, `institutionId`, `indexer`, `rate`, `startDate`, `maturityDate`, `liquidity`, `ticker`. Quantidade e custo vêm das movimentações |
+| `Lot` | Calculado a partir de `Transaction` a cada leitura, e não guardado: `date`, `amount` e `quantity` do que resta de cada aplicação. Serve ao IR por prazo; ações, FIIs, ETFs e cripto usam o custo médio |
 | `Transaction` | `date`, `type` (`buy`, `sell`, `deposit`, `withdraw`, `income`, `contribution`), `positionId`, `amount`, `quantity`, `fees`, `note` |
+| `Reconciliation` | `positionId`, `date`, `balance`. Saldo informado pelo banco, que se reparte entre os lotes |
 | `PensionPlan` | `ownMonthly`, `matchPct`, `vestingTable[]`, `balances[]`, `composition`, `fees`, `taxRegime` |
 | `ContributionPlan` | `date`, `amount`, `splits[]`, `status` (`planned`, `done`) |
 | `DecisionLog` | `date`, `type`, `reason`, `wouldChangeIf`, `relatedIds` |
 | `Thesis` | `positionId`, `text`, `reviewDate` |
-| `MarketSnapshot` | `asOf`, `indices`, `treasury`, `b3Prices`, `thermometer` |
+| `MarketSnapshot` | Tabela `market`, com o último arquivo baixado de cada fonte (`meta`, `indices`, `treasury`, `thermometer`, `b3`, `holidays` e `crypto`), a data dos dados e a da atualização pela rotina. É dado público e fica fora do backup |
 | `TaxParams` | `rule`, `value`, `verifiedAt`, `source` |
 | `AppSettings` | `discreetMode`, `lockEnabled`, `lastBackupAt`, `schemaVersion` |
 
@@ -315,7 +316,7 @@ Tudo fica em IndexedDB, em tabelas versionadas e com migração entre versões.
 
 - O saldo estimado soma os lotes, cada um corrigido pelo CDI diário vezes o percentual contratado, nos dias úteis.
 - O IR estimado sai por lote, conforme o prazo de cada um.
-- Na conciliação, o usuário informa o saldo do banco e o app registra a diferença.
+- Na conciliação, o usuário informa o saldo do banco e o app registra a diferença. O saldo se reparte entre os lotes, na proporção do valor de cada um, e cada lote passa a render a partir da sua parte.
 
 ## Dados de mercado
 
@@ -331,9 +332,10 @@ Uma rotina agendada baixa dados públicos uma vez por dia útil e publica arquiv
 
 - **Tesouro Reserva:** não aparece no CSV do Tesouro Transparente. Como rende a Selic sem marcação a mercado, o app estima o saldo pela Selic diária (série 11 do SGS).
 - **Cripto:** a Binance ficou de fora porque bloqueia os servidores do GitHub. O resultado de cada fonte está em `docs/sources.md`.
-- **Agenda:** dias úteis à noite, fora da hora cheia. Exemplo em UTC: `17 1 * * 2-6`.
+- **Agenda:** às 22h17 de Brasília, de segunda a sexta (`17 1 * * 2-6` em UTC), fora da hora cheia. O workflow `data` grava os arquivos e dispara a publicação, porque um push feito com o token do próprio workflow não inicia outros workflows.
 - **Atividade:** a rotina grava os arquivos no repositório. O commit diário mantém a agenda ativa, porque o [GitHub desativa agendas](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows) após 60 dias sem atividade.
-- **Falha de fonte:** o arquivo anterior é mantido e `meta.json` marca a fonte como atrasada. A rotina nunca derruba a publicação.
+- **Falha de fonte:** o arquivo anterior é mantido e `meta.json` marca a fonte como atrasada. A rotina nunca derruba a publicação nem troca um dado por outro mais velho.
+- **SGS:** por noite, a rotina baixa só os últimos 60 dias de cada série diária e os junta ao que já estava publicado, para pegar revisões. A série 432, da meta da Selic, vai em fatias de 3 anos: em janelas maiores, o SGS estoura o próprio tempo limite e responde uma página de erro com código 200.
 - **Validade:** o app mostra a data de cada dado e alerta após 5 dias úteis sem atualização.
 - **Alternativas para a B3, nesta ordem:** outro arquivo público da própria B3; fonte não oficial por biblioteca; API gratuita com chave guardada como segredo do repositório.
 - **Previdência:** não tem fonte automática. O saldo é digitado na revisão mensal.
@@ -346,7 +348,7 @@ A pilha é comum e sem servidor, para o Claude Code manter com facilidade.
 - Vite, React e TypeScript em modo estrito.
 - Dexie sobre IndexedDB. Zod valida dados importados e arquivos de mercado.
 - `vite-plugin-pwa` gera o service worker e o manifesto.
-- Biblioteca decimal para taxas e `date-fns` para datas.
+- Biblioteca decimal (decimal.js) para taxas. Datas por calendário próprio, com os feriados da ANBIMA e a regra da Lei 810/1949 para anos e meses.
 - SheetJS lê planilhas, carregado só na importação.
 - Gráficos em SVG próprio ou biblioteca leve, sem CDN.
 - Vitest para o motor e as contas. Playwright com WebKit para as telas.
@@ -384,7 +386,7 @@ São sete marcos, feitos um de cada vez, com teste no iPhone ao fim de cada um. 
 | 3. Política e aporte | Tela Política, alocação atual contra o alvo e sugestão de aporte | Casos de referência do motor passam |
 | 4. Risco e disciplina | Cenários, alertas, rebalanceamento, termômetro, revisão mensal e diário | Perdas por cenário iguais às deste documento para a alocação-alvo |
 | 5. Ferramentas | Comparador de renda fixa, simulador do PGBL, projeção, importação de planilha e ponte com o Claude | O resumo sai sem valores, um ajuste de política inválido é recusado e a importação lê o arquivo de exemplo |
-| 6. Acabamento | Acessibilidade, tema escuro, desempenho, auditoria de privacidade e guia de uso | O teste de rede bloqueada passa e não há dado pessoal no repositório |
+| 6. Acabamento | Acessibilidade, tema escuro, desempenho, bloqueio por senha ao abrir (opcional e desligado), auditoria de privacidade e guia de uso | O teste de rede bloqueada passa e não há dado pessoal no repositório |
 
 ### Testes obrigatórios
 
@@ -426,7 +428,7 @@ Estes pontos dependem do dono do app e não travam o marco 0.
 
 ## Fontes
 
-Páginas abertas entre 10 e 12 de outubro de 2026.
+Páginas abertas entre 10 e 19 de outubro de 2026.
 
 - [Reforma tributária 2026 e o IR dos investimentos, MyCapital](https://blog.mycapital.com.br/reforma-tributaria-2026-imposto-de-renda-investimentos/)
 - [Tabelas de IR em investimentos, Renova Invest](https://renovainvest.com.br/blog/guia-definitivo-tabelas-ir-investimentos/)
@@ -446,7 +448,9 @@ Páginas abertas entre 10 e 12 de outubro de 2026.
 - [Lei 13.043/2014, ETFs de renda fixa, Planalto](https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l13043.htm)
 - [Lei 9.250/1995, isenção de pequeno valor, Planalto](https://www.planalto.gov.br/ccivil_03/leis/l9250.htm)
 - [Lei 8.981/1995, alíquotas do ganho de capital, Planalto](https://www.planalto.gov.br/ccivil_03/leis/l8981.htm)
-- [Lei 11.033/2004, renda variável, Planalto](https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2004/lei/l11033.htm)
+- [Lei 11.033/2004, IR da renda fixa, isenções e renda variável, Planalto](https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2004/lei/l11033.htm)
+- [Decreto 6.306/2007, IOF, Planalto](https://www.planalto.gov.br/ccivil_03/_ato2007-2010/2007/decreto/d6306.htm)
+- [Lei 810/1949, contagem de anos e meses, Câmara dos Deputados](https://www2.camara.leg.br/legin/fed/lei/1940-1949/lei-810-6-setembro-1949-364059-publicacaooriginal-1-pl.html)
 - [Lei 9.532/1997, dedução da previdência, Planalto](https://www.planalto.gov.br/ccivil_03/leis/l9532.htm)
 - [Lei 14.803/2024, escolha do regime, Planalto](https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2024/lei/l14803.htm)
 - [Perguntas e Respostas IRPF 2026, Receita Federal](https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/perguntas-e-respostas/dirpf/p-r-irpf-2026-v1-00-2026-04-23.pdf)
