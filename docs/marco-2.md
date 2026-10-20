@@ -148,7 +148,7 @@ Com 180 e 181 dias o saldo é o mesmo, porque as duas datas caem num fim de sema
 
 ## Ajustes no SPEC.md
 
-Aprovados pelo dono do app e aplicados no SPEC.md em 20/10/2026. A tabela do modelo de dados também passou a listar o campo `name` da posição, que existe desde o marco 1.
+Aprovados pelo dono do app e aplicados no SPEC.md em 19/10/2026. A tabela do modelo de dados também passou a listar o campo `name` da posição, que existe desde o marco 1.
 
 1. **Modelo de dados.**
    - `Lot` passa a ser calculado a partir de `Transaction`, e não guardado.
@@ -165,7 +165,7 @@ Aprovados pelo dono do app e aplicados no SPEC.md em 20/10/2026. A tabela do mod
 - **IR de ações, FIIs, ETFs e cripto:** marco 4, nas sugestões de venda.
 - **Simulador da dedução do PGBL:** marco 5.
 - **Tamanho do pacote:** o JavaScript passou de 500 KB, ou 172 KB comprimidos, e o construtor avisa. Fica para o marco 6, de desempenho.
-- **Bloqueio por senha ao abrir:** aprovado para o marco 6 em 20/10/2026 e registrado no SPEC.md. Continua opcional e desligado de fábrica.
+- **Bloqueio por senha ao abrir:** aprovado para o marco 6 em 19/10/2026 e registrado no SPEC.md. Continua opcional e desligado de fábrica.
 
 ## Teste no iPhone
 
