@@ -2,6 +2,8 @@
 
 Oct 11, 2026
 
+> **Aditivo 1, de 15/10/2026:** o arquivo [SPEC-ADITIVO-01-mesa-do-investidor.md](SPEC-ADITIVO-01-mesa-do-investidor.md) acrescenta a Mesa do investidor, nos marcos 7 a 9, e muda alguns padrões deste documento. Quando os dois divergirem, vale o aditivo. Ele será incorporado a este documento ao fim do marco 7.
+
 App pessoal para iPhone que registra a carteira, compara com uma política de investimento e diz para onde vai cada aporte. Roda inteiro no aparelho, custa R$ 0 e não envia nenhum dado pessoal. Este documento é o que o Claude Code precisa para construir, e não contém dado pessoal: pode ir para um repositório público.
 
 ## Decisões fechadas

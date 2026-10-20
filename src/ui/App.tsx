@@ -38,7 +38,12 @@ function screen(route: Route): ReactNode {
         </Planned>
       );
     case 'revisao':
-      return <Planned milestone="4">Checklist do mês, diário de decisões e tese de cada ativo de renda variável.</Planned>;
+      return (
+        <Planned milestone="4 e 7">
+          Checklist do mês, diário de decisões com as revisões pendentes, tese de cada ativo de renda variável e boletim de
+          disciplina.
+        </Planned>
+      );
     case 'reserva':
       return <Planned milestone="2">Saldos da reserva, rendimento estimado pelo CDI e conciliação com o saldo do banco.</Planned>;
     case 'previdencia':
@@ -49,12 +54,25 @@ function screen(route: Route): ReactNode {
       );
     case 'politica':
       return (
-        <Planned milestone="3">
-          Meta da reserva, alvos e faixas, limites, choques dos cenários, termômetro de taxas e parâmetros fiscais.
+        <Planned milestone="3, 7 e 8">
+          Meta da reserva, alvos e faixas, limites, choques dos cenários, termômetro de taxas, parâmetros fiscais,
+          orçamento de risco, critérios da nota do ativo e limites dos freios.
         </Planned>
       );
     case 'cenarios':
-      return <Planned milestone="4">Perda da carteira em cada cenário, em reais e em percentual, e a classe que mais pesa.</Planned>;
+      return (
+        <Planned milestone="4 e 9">
+          Perda da carteira em cada cenário, em reais e em percentual, a classe que mais pesa e o teste histórico da
+          política.
+        </Planned>
+      );
+    case 'mesa':
+      return (
+        <Planned milestone="7, 8 e 9">
+          Lista de observação com gatilhos, nota do ativo, checklist de compra, calculadora de tamanho máximo e modo
+          treino, com dinheiro fictício.
+        </Planned>
+      );
     case 'ferramentas':
       return (
         <Planned milestone="5">

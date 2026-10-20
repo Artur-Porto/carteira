@@ -6,6 +6,7 @@ const DESCRIPTIONS: Record<(typeof MORE_ROUTES)[number], string> = {
   previdencia: 'Carência, saldo garantido e dedução',
   politica: 'Alvos, faixas, limites e cenários',
   cenarios: 'Perda da carteira em cada crise testada',
+  mesa: 'Checklist de compra, tamanho máximo e treino',
   ferramentas: 'Comparador, equivalência e projeção',
   claude: 'Resumo para colar na conversa',
   ajustes: 'Backup, modo discreto e dados',

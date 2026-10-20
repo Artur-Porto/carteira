@@ -58,13 +58,20 @@ export const INITIAL_SCENARIOS: Scenario[] = [
   { id: 'invernoCripto', name: 'Inverno cripto', shocks: shocks([0, 0, 0, 0, 0, 0, 0, -80, 0]) },
 ];
 
+/**
+ * Addendum 1, section 2.2: no single stock may cost more than the 2% risk budget in a 70% fall,
+ * so 2 ÷ 0.70 = 2.86% of the free portfolio. A constant until milestone 7 derives it from the
+ * formula and migrates saved policies that still hold the old 5%.
+ */
+export const SINGLE_STOCK_MAX_PCT = 2.86;
+
 export function initialPolicy(now: IsoDateTime, monthlyCostCents: Cents = 0): Policy {
   return {
     id: 'policy',
     reserve: { months: 12, monthlyCostCents, minCdiPct: 100 },
     targets: { ...INITIAL_TARGETS },
     bands: bandsFor(INITIAL_TARGETS),
-    limits: { criptoMaxPct: 5, issuerFgcPct: 80, singleStockMaxPct: 5, singleFiiMaxPctOfClass: 25 },
+    limits: { criptoMaxPct: 5, issuerFgcPct: 80, singleStockMaxPct: SINGLE_STOCK_MAX_PCT, singleFiiMaxPctOfClass: 25 },
     scenarios: structuredClone(INITIAL_SCENARIOS),
     tiltEnabled: true,
     maxDrawdown: 20,

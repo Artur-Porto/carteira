@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { tablesSchema } from '../../src/data/schemas';
 import { demoTables } from '../../src/demo/demo';
-import { INITIAL_SCENARIOS, INITIAL_TARGETS, bandFor, initialPolicy } from '../../src/domain/policy';
+import { INITIAL_SCENARIOS, INITIAL_TARGETS, SINGLE_STOCK_MAX_PCT, bandFor, initialPolicy } from '../../src/domain/policy';
 import { ASSET_CLASSES } from '../../src/domain/types';
 
 describe('initial policy (SPEC)', () => {
@@ -35,6 +35,14 @@ describe('initial policy (SPEC)', () => {
     expect(loss('jurosEmAlta')).toBe(-11.7);
     expect(loss('apertoGlobal')).toBe(-11.92);
     expect(loss('invernoCripto')).toBe(-2.4);
+  });
+
+  it('caps a single stock by the risk budget of addendum 1', () => {
+    // 2% of the free portfolio at risk in a 70% fall, rounded to hundredths of a point.
+    expect(SINGLE_STOCK_MAX_PCT).toBe(Math.round((2 / 0.7) * 100) / 100);
+    const policy = initialPolicy(new Date().toISOString());
+    expect(policy.limits.singleStockMaxPct).toBe(2.86);
+    expect(policy.limits.singleFiiMaxPctOfClass).toBe(25);
   });
 
   it('demo data passes the import schemas', () => {

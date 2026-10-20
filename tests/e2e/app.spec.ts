@@ -11,7 +11,16 @@ test('first launch with demo data reaches every screen', async ({ page }) => {
   await openTab(page, 'Revisão', 'Revisão mensal');
   await openTab(page, 'Início', 'Início');
 
-  for (const title of ['Reserva', 'Previdência', 'Política', 'Cenários', 'Ferramentas', 'Conversa com o Claude', 'Ajustes']) {
+  for (const title of [
+    'Reserva',
+    'Previdência',
+    'Política',
+    'Cenários',
+    'Mesa do investidor',
+    'Ferramentas',
+    'Conversa com o Claude',
+    'Ajustes',
+  ]) {
     await openTab(page, 'Mais', 'Mais');
     await page.getByRole('link', { name: new RegExp(`^${title}`) }).click();
     await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
