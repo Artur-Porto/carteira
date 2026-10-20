@@ -42,7 +42,7 @@ Construído em 19/10/2026. Aceite do SPEC: saldos batem com os casos de referên
 
 ## Parâmetros fiscais conferidos
 
-Conferidos em 19/10/2026, no texto compilado do Planalto, antes do uso no app.
+Conferidos em 19/10/2026, antes do uso no app, no texto compilado do Planalto e, para a Lei 810, no portal da Câmara.
 
 | Regra | Valor | Fonte oficial |
 | --- | --- | --- |
