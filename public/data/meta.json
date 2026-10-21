@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-20T06:03:42.582Z",
+  "generatedAt": "2026-10-21T06:03:51.477Z",
   "sources": {
-    "indices": {"ok":false,"asOf":"2026-10-16","updatedAt":"2026-10-20T00:24:04.280Z","error":"SGS 11 não respondeu JSON (20/08/2026 a 20/10/2026)"},
-    "treasury": {"ok":true,"asOf":"2026-10-15","updatedAt":"2026-10-20T06:03:42.582Z"},
-    "b3": {"ok":true,"asOf":"2026-10-19","updatedAt":"2026-10-20T06:03:42.582Z"},
-    "holidays": {"ok":true,"asOf":"2026-10-19","updatedAt":"2026-10-20T06:03:42.582Z"},
-    "crypto": {"ok":true,"asOf":"2026-10-20","updatedAt":"2026-10-20T06:03:42.582Z"}
+    "indices": {"ok":true,"asOf":"2026-10-19","updatedAt":"2026-10-21T06:03:51.477Z"},
+    "treasury": {"ok":true,"asOf":"2026-10-15","updatedAt":"2026-10-21T06:03:51.477Z"},
+    "b3": {"ok":true,"asOf":"2026-10-20","updatedAt":"2026-10-21T06:03:51.477Z"},
+    "holidays": {"ok":true,"asOf":"2026-10-19","updatedAt":"2026-10-21T06:03:51.477Z"},
+    "crypto": {"ok":true,"asOf":"2026-10-21","updatedAt":"2026-10-21T06:03:51.477Z"}
   }
 }
