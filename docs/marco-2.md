@@ -167,11 +167,24 @@ Aprovados pelo dono do app e aplicados no SPEC.md em 19/10/2026. A tabela do mod
 - **Tamanho do pacote:** o JavaScript passou de 500 KB, ou 172 KB comprimidos, e o construtor avisa. Fica para o marco 6, de desempenho.
 - **Bloqueio por senha ao abrir:** aprovado para o marco 6 em 19/10/2026 e registrado no SPEC.md. Continua opcional e desligado de fábrica.
 
+## Depois da entrega
+
+- **Tesouro parado na fonte.**
+  - Desde 16/10/2026, o Tesouro Transparente não atualiza nenhum dos conjuntos de dados do Tesouro Direto: taxas, estoque, vendas e resgates.
+  - `treasury.json` e `thermometer.json` continuam com os preços de 15/10.
+  - A rotina baixa o arquivo sem erro, e a execução termina como bem-sucedida.
+  - O JSON do site do Tesouro Direto, que poderia servir de alternativa, responde HTTP 410.
+  - Quando o CSV voltar, a rotina se atualiza sozinha, porque baixa o histórico inteiro toda noite.
+- **Publicação travada.**
+  - Em 23/10, com 6 dias úteis sem dado novo do Tesouro, o Início passou a mostrar o aviso de dados desatualizados, como previsto.
+  - O teste offline só aceitava a linha com a data e barrou as publicações de 23 e 24/10.
+  - O app ficou com os dados publicados em 22/10 até 25/10, quando o teste passou a aceitar também o aviso.
+
 ## Teste no iPhone
 
 1. Abra o app pelo ícone. Em Mais → Ajustes → Sobre, confira "Carteira 0.2.0". Se aparecer 0.1.0, feche o app pelo seletor de apps e abra de novo.
 2. O demo mudou. Em Ajustes, digite APAGAR, toque em **Apagar tudo** e depois em **Explorar com dados fictícios**.
-3. **Início:** o patrimônio sai a preço de hoje, com a data dos dados de mercado. A reserva cobre cerca de 11 meses.
+3. **Início:** o patrimônio sai a preço de hoje, com a data dos dados de mercado. A reserva cobre cerca de 11 meses. Enquanto o Tesouro Transparente estiver parado, no lugar da data aparece o aviso de dados desatualizados do Tesouro Direto, de 15/10/2026.
 4. **Carteira → Cofrinho do Banco Fictício A:** confira os 4 lotes, o IR de cada um e o saldo informado em 30/09/2026.
 5. Ainda no cofrinho, toque em **Registrar movimentação**, escolha Resgate e informe R$ 1.000,00. Os lotes devem diminuir a partir do mais antigo.
 6. Toque em **Informar saldo do banco**, digite um valor perto da estimativa e salve. O valor da posição deve passar a ser o saldo digitado.
@@ -181,6 +194,6 @@ Aprovados pelo dono do app e aplicados no SPEC.md em 19/10/2026. A tabela do mod
    - as listas de opções (Tipo, Título, Balde, Classe) devem abrir a roleta do iPhone e mostrar o texto inteiro;
    - não precisa salvar.
 8. **Mais → Previdência:** saldo garantido de R$ 37.200,00 e próximo degrau em 01/03/2027.
-9. **Mais → Ajustes → Dados de mercado:** toque em **Atualizar agora** e confira as datas.
+9. **Mais → Ajustes → Dados de mercado:** toque em **Atualizar agora** e confira as datas. Enquanto a fonte estiver parada, o Tesouro Direto aparece como desatualizado.
 10. **Offline:** ative o modo avião, feche o app e abra de novo. Os valores devem aparecer como antes. Depois, desative o modo avião.
 11. Conte o resultado de cada passo e qualquer coisa estranha nas telas, principalmente nos formulários.
