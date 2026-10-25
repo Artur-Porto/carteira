@@ -1,6 +1,6 @@
 # Marco 2: carteira
 
-Construído em 19/10/2026. Aceite do SPEC: saldos batem com os casos de referência. O teste no iPhone está no fim deste arquivo.
+Construído em 19/10/2026. Aceite do SPEC: saldos batem com os casos de referência. Aceito no iPhone em 25/10/2026, com todos os passos do roteiro do fim deste arquivo.
 
 ## O que foi entregue
 
@@ -202,3 +202,20 @@ Aprovados pelo dono do app e aplicados no SPEC.md em 19/10/2026. A tabela do mod
 9. **Mais → Ajustes → Dados de mercado:** toque em **Atualizar agora** e confira as datas. Enquanto a fonte estiver parada, o Tesouro Direto aparece como desatualizado.
 10. **Offline:** ative o modo avião, feche o app e abra de novo. Os valores devem aparecer como antes. Depois, desative o modo avião.
 11. Conte o resultado de cada passo e qualquer coisa estranha nas telas, principalmente nos formulários.
+
+### Resultado (25/10/2026)
+
+| Passo | Resultado |
+| --- | --- |
+| Versão 0.2.0 em Ajustes → Sobre | OK |
+| Dados fictícios refeitos | OK |
+| Início: patrimônio, meses de reserva e aviso do Tesouro de 15/10 | OK |
+| Cofrinho: lotes, IR e saldo informado | OK |
+| Resgate de R$ 1.000,00 a partir do lote mais antigo | OK |
+| Saldo do banco virando o valor da posição | OK |
+| Nova posição: IVVB11, títulos do Tesouro e listas de opções | OK |
+| Previdência: saldo garantido e próximo degrau | OK |
+| Dados de mercado: atualização e datas | OK |
+| Abertura offline | OK |
+
+Marco 2 concluído em 25/10/2026.
