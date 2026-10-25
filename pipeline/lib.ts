@@ -20,6 +20,22 @@ export function weekday(date: IsoDate): number {
   return new Date(`${date}T12:00:00Z`).getUTCDay();
 }
 
+/** The app warns about data older than this (SPEC, "Dados de mercado"), and the routine fails. */
+export const STALE_AFTER_BUSINESS_DAYS = 5;
+
+/**
+ * Business days d with from <= d < to: Monday to Friday, except holidays. The app's calendar
+ * counts the same way, so data from the previous business day is 1 day old.
+ */
+export function businessDaysBetween(from: IsoDate, to: IsoDate, holidays: ReadonlySet<IsoDate>): number {
+  let count = 0;
+  for (let d = from; d < to; d = addDays(d, 1)) {
+    const wd = weekday(d);
+    if (wd !== 0 && wd !== 6 && !holidays.has(d)) count++;
+  }
+  return count;
+}
+
 /** "dd/mm/aaaa" to "aaaa-mm-dd"; throws on anything else. */
 export function brToIso(text: string): IsoDate {
   const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text.trim());

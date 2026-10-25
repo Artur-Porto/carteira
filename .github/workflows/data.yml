@@ -2,7 +2,8 @@ name: data
 
 # Downloads public market data every business-day night and publishes it with the app
 # (SPEC, "Dados de mercado"). A failing source keeps its previous file: the run still
-# publishes the others, and then fails so the problem shows up in the Actions tab.
+# publishes the others, and then fails so the problem shows up in the Actions tab. A source
+# whose data is more than 5 business days old fails the run the same way.
 on:
   schedule:
     # 22:17 in Brasília, Monday to Friday, off the full hour.
@@ -64,5 +65,5 @@ jobs:
       - name: Fail when a source is late
         if: steps.update.outcome == 'failure'
         run: |
-          echo "Alguma fonte falhou e manteve o arquivo anterior. Veja o resumo desta execução."
+          echo "Alguma fonte falhou ou está com dado de mais de 5 dias úteis. Veja o resumo desta execução."
           exit 1

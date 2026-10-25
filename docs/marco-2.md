@@ -179,6 +179,11 @@ Aprovados pelo dono do app e aplicados no SPEC.md em 19/10/2026. A tabela do mod
   - Em 23/10, com 6 dias úteis sem dado novo do Tesouro, o Início passou a mostrar o aviso de dados desatualizados, como previsto.
   - O teste offline só aceitava a linha com a data e barrou as publicações de 23 e 24/10.
   - O app ficou com os dados publicados em 22/10 até 25/10, quando o teste passou a aceitar também o aviso.
+- **Aviso na rotina**, aprovado em 25/10/2026.
+  - A rotina passou a usar o limite do app: uma fonte com dado de mais de 5 dias úteis aparece como atrasada no resumo, mesmo quando o download funciona, e a execução termina com erro.
+  - `meta.json` continua marcando só as falhas de download, porque o app já calcula a idade de cada dado.
+  - Enquanto o Tesouro estiver parado, a execução noturna vai falhar, e o GitHub avisa por e-mail.
+  - Numa execução local em 25/10, o Tesouro saiu como atrasado, com "dado com 7 dias úteis, acima do limite de 5".
 
 ## Teste no iPhone
 

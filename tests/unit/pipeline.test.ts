@@ -1,6 +1,7 @@
-// The data routine's parsers, on small fictitious copies of each public source.
+// The data routine's parsers, on small fictitious copies of each public source, and its limit for
+// stale data.
 import { describe, expect, it } from 'vitest';
-import { brDecimal, normalizeDecimal } from '../../pipeline/lib';
+import { STALE_AFTER_BUSINESS_DAYS, addDays, brDecimal, businessDaysBetween, normalizeDecimal } from '../../pipeline/lib';
 import {
   changePoints,
   checkDailyRates,
@@ -16,6 +17,8 @@ import {
   parseTesouroCsv,
   thermometerSeries,
 } from '../../pipeline/parse';
+import { BusinessCalendar } from '../../src/domain/calendar';
+import { STALE_AFTER_BUSINESS_DAYS as APP_STALE_AFTER_BUSINESS_DAYS } from '../../src/ui/marketStatus';
 
 describe('numbers from the sources', () => {
   it('normalizes decimal text without floating point', () => {
@@ -237,5 +240,25 @@ describe('Mercado Bitcoin', () => {
     expect(prices).toEqual({ BTC: '413349', ETH: '12147' });
     expect(Object.keys(prices)).toEqual(['BTC', 'ETH']);
     expect(() => mercadoBitcoinPrices([{ pair: 'ETH-BRL', last: '1' }])).toThrow(/BTC/);
+  });
+});
+
+describe('age of the published data', () => {
+  it('uses the app’s limit and counts business days as the app’s calendar does', () => {
+    expect(STALE_AFTER_BUSINESS_DAYS).toBe(APP_STALE_AFTER_BUSINESS_DAYS);
+    const holidays = ['2026-11-02', '2026-11-20', '2026-12-25', '2027-01-01', '2027-02-08', '2027-02-09'];
+    const app = new BusinessCalendar(holidays);
+    for (let from = '2026-10-26'; from < '2027-02-20'; from = addDays(from, 3)) {
+      for (const span of [0, 1, 2, 3, 6, 9, 12]) {
+        const to = addDays(from, span);
+        expect(businessDaysBetween(from, to, new Set(holidays)), `${from} a ${to}`).toBe(app.businessDaysBetween(from, to));
+      }
+    }
+  });
+
+  it('puts the Tesouro data of 15/10/2026 past the limit on 23/10, as the app did', () => {
+    const age = (today: string) => businessDaysBetween('2026-10-15', today, new Set(['2026-10-12']));
+    expect(age('2026-10-22')).toBe(STALE_AFTER_BUSINESS_DAYS);
+    expect(age('2026-10-23')).toBe(STALE_AFTER_BUSINESS_DAYS + 1);
   });
 });

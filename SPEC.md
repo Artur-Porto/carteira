@@ -336,7 +336,7 @@ Uma rotina agendada baixa dados públicos uma vez por dia útil e publica arquiv
 - **Atividade:** a rotina grava os arquivos no repositório. O commit diário mantém a agenda ativa, porque o [GitHub desativa agendas](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows) após 60 dias sem atividade.
 - **Falha de fonte:** o arquivo anterior é mantido e `meta.json` marca a fonte como atrasada. A rotina nunca derruba a publicação nem troca um dado por outro mais velho.
 - **SGS:** por noite, a rotina baixa só os últimos 60 dias de cada série diária e os junta ao que já estava publicado, para pegar revisões. A série 432, da meta da Selic, vai em fatias de 3 anos: em janelas maiores, o SGS estoura o próprio tempo limite e responde uma página de erro com código 200.
-- **Validade:** o app mostra a data de cada dado e alerta após 5 dias úteis sem atualização.
+- **Validade:** o app mostra a data de cada dado e alerta após 5 dias úteis sem atualização. A rotina usa o mesmo limite: uma fonte que responde com dado mais velho que isso aparece como atrasada no resumo da execução, que termina com erro.
 - **Alternativas para a B3, nesta ordem:** outro arquivo público da própria B3; fonte não oficial por biblioteca; API gratuita com chave guardada como segredo do repositório.
 - **Previdência:** não tem fonte automática. O saldo é digitado na revisão mensal.
 - **Importação de planilha:** leitor genérico com mapeamento de colunas. Inclui uma predefinição para o extrato da [Área do Investidor da B3](https://borainvestir.b3.com.br/tipos-de-investimentos/renda-fixa/confira-seus-ativos-de-renda-fixa-na-area-do-investidor-b3/), validada com um arquivo de exemplo de valores alterados.

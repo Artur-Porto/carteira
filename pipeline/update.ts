@@ -1,6 +1,7 @@
 // Daily data routine (SPEC, "Dados de mercado"). Downloads public market data and publishes it in
 // public/data/, next to the app. A source that fails keeps its previous file and is marked late
-// in meta.json; the other sources go on. Touches only public data, never anything personal.
+// in meta.json; the other sources go on. A source that answers with data older than the app's
+// limit is reported late too. Touches only public data, never anything personal.
 //
 // Usage: node update.ts [--full]   (Node >= 22.18). --full downloads every series from the start.
 import { appendFileSync } from 'node:fs';
@@ -20,7 +21,9 @@ import type {
 } from '../src/market/files.ts';
 import { MARKET_SOURCES } from '../src/market/files.ts';
 import {
+  STALE_AFTER_BUSINESS_DAYS,
   addDays,
+  businessDaysBetween,
   decode,
   fetchBytes,
   fetchOk,
@@ -265,6 +268,17 @@ await Promise.all(
 const ordered = Object.fromEntries(MARKET_SOURCES.map(id => [id, sources[id]])) as Record<MarketSource, SourceStatus>;
 writeJson(file('meta'), { version: 1, generatedAt: NOW, sources: ordered } satisfies MetaFile);
 
+// A source can answer without error and bring nothing new, as the Tesouro Transparente did from
+// 16/10/2026 while every run passed. Past the app's limit it counts as late, but meta.json keeps
+// ok, because the app already judges the age itself. The holiday list runs to 2099, so its date
+// says nothing about the market.
+const holidays = new Set((readJson(file('holidays')) as HolidaysFile | undefined)?.dates ?? []);
+const ageOf = (id: MarketSource): number | null => {
+  const asOf = ordered[id].asOf;
+  return asOf && id !== 'holidays' ? businessDaysBetween(asOf, TODAY, holidays) : null;
+};
+const isStale = (id: MarketSource) => (ageOf(id) ?? 0) > STALE_AFTER_BUSINESS_DAYS;
+
 const report = [
   `## Dados de mercado, ${isoToBr(TODAY)}${FULL ? ' (completo)' : ''}`,
   '',
@@ -272,11 +286,13 @@ const report = [
   '| --- | --- | --- | --- |',
   ...MARKET_SOURCES.map(id => {
     const s = ordered[id];
-    return `| ${id} | ${s.ok ? 'OK' : 'ATRASADA'} | ${s.asOf ? isoToBr(s.asOf) : '-'} | ${s.error ?? ''} |`;
+    const stale = isStale(id) ? `dado com ${ageOf(id)} dias úteis, acima do limite de ${STALE_AFTER_BUSINESS_DAYS}` : '';
+    const problems = [s.error, stale].filter(Boolean).join('; ');
+    return `| ${id} | ${s.ok && !stale ? 'OK' : 'ATRASADA'} | ${s.asOf ? isoToBr(s.asOf) : '-'} | ${problems} |`;
   }),
   ...(notes.length ? ['', ...notes.map(n => `- ${n}`)] : []),
   '',
 ].join('\n');
 console.log(report);
 if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, report);
-process.exitCode = MARKET_SOURCES.every(id => ordered[id].ok || OPTIONAL.includes(id)) ? 0 : 1;
+process.exitCode = MARKET_SOURCES.every(id => (ordered[id].ok && !isStale(id)) || OPTIONAL.includes(id)) ? 0 : 1;
