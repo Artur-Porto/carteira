@@ -20,8 +20,9 @@ test('opens offline after the first visit', async ({ page, context, browserName,
   await page.reload();
   await expect(page.getByRole('heading', { level: 1, name: 'Início' })).toBeVisible();
   await expect(page.getByText('Você está vendo dados fictícios')).toBeVisible();
-  // The market data downloaded online is still there.
-  await expect(page.getByText(/^Dados de mercado de /)).toBeVisible();
+  // The market data downloaded online is still there. The files are the real ones, so a source
+  // that stopped updating upstream turns the date line into the stale-data notice.
+  await expect(page.getByText(/^Dados de mercado (de |desatualizados: )/)).toBeVisible();
   await page.goto('./#/ajustes');
   await expect(page.getByRole('heading', { name: 'Dados de mercado' })).toBeVisible();
   await expect(page.getByText('sem dados')).toHaveCount(0);
