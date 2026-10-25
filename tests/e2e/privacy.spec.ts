@@ -40,11 +40,17 @@ test('a full session never leaves the origin', async ({ page, context, baseURL }
   ] as const) {
     await openTab(page, label, title);
   }
-  for (const title of ['Reserva', 'Previdência']) {
+  await openTab(page, 'Aporte', 'Aporte do mês');
+  await page.getByLabel('Valor do aporte').fill('3.000,00');
+  await page.getByRole('button', { name: 'Salvar plano' }).click();
+  await expect(page.getByRole('button', { name: 'Plano salvo' })).toBeVisible();
+  for (const title of ['Reserva', 'Previdência', 'Política']) {
     await openTab(page, 'Mais', 'Mais');
     await page.getByRole('link', { name: new RegExp(`^${title}`) }).click();
     await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
   }
+  await page.getByRole('button', { name: 'Salvar política' }).click();
+  await expect(page.getByRole('status')).toHaveText('Política salva.');
   await openTab(page, 'Carteira', 'Carteira');
   await page.getByRole('link', { name: /ETF do Ibovespa/ }).click();
   await expect(page.getByRole('heading', { name: 'ETF do Ibovespa' })).toBeVisible();

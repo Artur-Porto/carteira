@@ -1,4 +1,7 @@
-import { reserveMonths } from '../../domain/portfolio';
+import { ASSET_CLASS_LABELS, initialPolicy } from '../../domain/policy';
+import { grossByClass, reserveMonths } from '../../domain/portfolio';
+import { allocation } from '../../engine/allocation';
+import { AllocationBars } from '../components/AllocationBars';
 import { Money } from '../discreet';
 import { formatDate, formatDateTime } from '../format';
 import { usePortfolio } from '../hooks';
@@ -22,6 +25,10 @@ export function Home() {
   const dates = sources.flatMap(s => (s.asOf ? [s.asOf] : [])).sort();
   const oldest = dates[0];
   const newest = dates.at(-1);
+  // Without a saved policy yet, the targets shown are the initial ones.
+  const shownPolicy = policy ?? initialPolicy(settings.createdAt);
+  const rows = allocation(grossByClass(value), shownPolicy.targets, shownPolicy.bands);
+  const outside = rows.filter(r => r.status && r.status !== 'dentro');
 
   return (
     <>
@@ -87,6 +94,27 @@ export function Home() {
             <strong>{months.toLocaleString('pt-BR', { minimumFractionDigits: 1 })} meses</strong> de custo de vida
             cobertos, para uma meta de {policy?.reserve.months} meses. Conta pelo valor líquido, depois do IR.
           </p>
+        )}
+      </section>
+
+      <section className="card" aria-labelledby="home-allocation-title">
+        <h2 id="home-allocation-title">Alocação da carteira livre</h2>
+        {value.free.grossCents > 0 ? (
+          <>
+            {outside.length > 0 && (
+              <p>
+                {outside.length === 1 ? 'Uma classe está fora da faixa: ' : `${outside.length} classes estão fora da faixa: `}
+                {outside.map(r => ASSET_CLASS_LABELS[r.assetClass]).join(', ')}. O aporte do mês corrige primeiro os maiores déficits.
+              </p>
+            )}
+            <AllocationBars rows={rows} />
+            <p className="muted small">
+              A barra mostra a classe hoje, o traço marca o alvo e o trecho mais escuro, a faixa aceita.{' '}
+              <a href={hrefFor('politica')}>Ver a política</a>
+            </p>
+          </>
+        ) : (
+          <p className="muted">A carteira livre ainda está vazia. Quando houver posições, cada classe aparece aqui contra o alvo da política.</p>
         )}
       </section>
 

@@ -10,6 +10,10 @@
   --danger: #a32020;
   --notice-bg: #fff4d6;
   --notice-text: #5c3d00;
+  /* Chart marks, checked with the dataviz validator against each surface. */
+  --chart-bar: #0b7d5c;
+  --chart-track: #eef1ee;
+  --chart-band: #d3dad5;
   --tabbar-height: 56px;
   color-scheme: light dark;
 }
@@ -26,6 +30,9 @@
     --danger: #ff8a80;
     --notice-bg: #3a2f12;
     --notice-text: #f5d58a;
+    --chart-bar: #34a982;
+    --chart-track: #232825;
+    --chart-band: #3b443f;
   }
 }
 
@@ -482,6 +489,110 @@ fieldset.group legend {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Allocation against the target: one row per class, the numbers written out above each bar. */
+.alloc {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.alloc > li {
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+.alloc > li:first-child {
+  border-top: 0;
+}
+
+.alloc-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.alloc-bar {
+  display: block;
+  margin: 4px 0 2px;
+}
+
+.alloc-track {
+  fill: var(--chart-track);
+}
+
+.alloc-band {
+  fill: var(--chart-band);
+}
+
+.alloc-share {
+  fill: var(--chart-bar);
+}
+
+.alloc-target {
+  fill: var(--text);
+}
+
+/* Contribution plan. */
+.plan {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plan > li {
+  display: block;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+
+.plan > li:first-child {
+  border-top: 0;
+}
+
+.plan .split-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-weight: 700;
+}
+
+.plan ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.plan ul li {
+  margin: 2px 0;
+}
+
+.checks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checks > li {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+.checks > li:first-child {
+  border-top: 0;
+}
+
+.checks .mark {
+  flex: none;
+  font-weight: 700;
 }
 
 /* First-launch guide. */

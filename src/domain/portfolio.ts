@@ -76,6 +76,11 @@ export function valuePortfolio({ positions, transactions, reconciliations, pensi
   return { valuations, reserve, free, byClass, pensionCents, unpricedCount };
 }
 
+/** Gross value of each class of the free portfolio: the basis of the allocation against the policy. */
+export function grossByClass(value: Pick<PortfolioValue, 'byClass'>): Record<AssetClass, Cents> {
+  return Object.fromEntries(ASSET_CLASSES.map(cls => [cls, value.byClass[cls].grossCents])) as Record<AssetClass, Cents>;
+}
+
 /** Months of living cost the reserve covers, rounded down to a tenth; null without a cost. */
 export function reserveMonths(reserveCents: Cents, monthlyCostCents: Cents): number | null {
   if (monthlyCostCents <= 0) return null;

@@ -1,7 +1,7 @@
 {
   "name": "carteira",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Carteira de investimentos pessoal para iPhone. Os dados ficam só no aparelho.",
   "type": "module",
   "engines": {

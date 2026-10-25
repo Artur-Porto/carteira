@@ -1,7 +1,18 @@
 // Writes of the owner's records. Each runs in one IndexedDB transaction, so nothing is left half
 // done. Quantities, costs and lots are never written: domain/valuation.ts derives them.
-import { initialPolicy } from '../domain/policy';
-import type { Cents, Entity, Institution, PensionBalance, PensionPlan, Position, Reconciliation, Transaction } from '../domain/types';
+import { bandsFor, initialPolicy } from '../domain/policy';
+import type {
+  Cents,
+  ContributionPlan,
+  Entity,
+  Institution,
+  PensionBalance,
+  PensionPlan,
+  Policy,
+  Position,
+  Reconciliation,
+  Transaction,
+} from '../domain/types';
 import type { CarteiraDb } from './db';
 
 export type Draft<T extends Entity> = Omit<T, 'id' | 'createdAt' | 'updatedAt'> & { id?: string };
@@ -114,6 +125,34 @@ export async function deletePensionBalance(db: CarteiraDb, planId: string, date:
 
 export async function deletePensionPlan(db: CarteiraDb, id: string): Promise<void> {
   await db.pensionPlans.delete(id);
+}
+
+/** Saves the policy edited on the Política screen, with the bands recomputed from the targets. */
+export async function savePolicy(db: CarteiraDb, policy: Omit<Policy, 'id' | 'bands' | 'createdAt' | 'updatedAt'>): Promise<void> {
+  const now = new Date().toISOString();
+  await db.transaction('rw', db.policies, async () => {
+    const existing = await db.policies.get('policy');
+    await db.policies.put({ ...policy, id: 'policy', bands: bandsFor(policy.targets), createdAt: existing?.createdAt ?? now, updatedAt: now });
+  });
+}
+
+/** Records a contribution plan (SPEC, step 7: "O plano vira histórico"). Returns its id. */
+export async function saveContributionPlan(db: CarteiraDb, draft: Draft<ContributionPlan>): Promise<string> {
+  const now = new Date().toISOString();
+  return db.transaction('rw', db.contributionPlans, async () => {
+    const existing = draft.id ? await db.contributionPlans.get(draft.id) : undefined;
+    const plan = stamped<ContributionPlan>(draft, existing, now);
+    await db.contributionPlans.put(plan);
+    return plan.id;
+  });
+}
+
+export async function setContributionPlanStatus(db: CarteiraDb, id: string, status: ContributionPlan['status']): Promise<void> {
+  await db.contributionPlans.update(id, { status, updatedAt: new Date().toISOString() });
+}
+
+export async function deleteContributionPlan(db: CarteiraDb, id: string): Promise<void> {
+  await db.contributionPlans.delete(id);
 }
 
 /** The monthly living cost behind the reserve target; creates the initial policy if needed. */

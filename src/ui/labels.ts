@@ -1,5 +1,24 @@
-import type { Indexer, InstrumentType, Liquidity, TaxRegime, TransactionType } from '../domain/types';
+import type { AssetClass, Indexer, InstrumentType, Liquidity, TaxRegime, TransactionType } from '../domain/types';
 import type { ValuationIssue } from '../domain/valuation';
+import type { BandStatus } from '../engine/allocation';
+
+/** SPEC, "Aporte do mês", step 5: the kind of asset each class takes, never a specific asset. */
+export const CLASS_TYPE_TEXTS: Record<AssetClass, string> = {
+  rfPosFixada: 'CDB, LCI ou LCA pós-fixado com FGC, ou Tesouro Selic, com vencimento em 2 a 5 anos.',
+  rfIpcaCurta: 'Tesouro IPCA+ ou título de banco atrelado ao IPCA, com vencimento em até 5 anos.',
+  rfPrefixada: 'Tesouro Prefixado ou título prefixado de banco, com vencimento em até 5 anos.',
+  rfIpcaLonga: 'Tesouro IPCA+ com vencimento acima de 5 anos.',
+  acoesBrasil: 'ETF amplo de ações Brasil, o núcleo da classe.',
+  fiis: 'Cotas de FIIs, sem que um fundo passe do limite dentro da classe.',
+  exterior: 'ETF de índice amplo do exterior, listado na B3.',
+  cripto: 'Cripto, dentro do teto da política.',
+};
+
+export const BAND_STATUS_LABELS: Record<BandStatus, string> = {
+  abaixo: 'abaixo da faixa',
+  dentro: 'dentro da faixa',
+  acima: 'acima da faixa',
+};
 
 export const INSTRUMENT_LABELS: Record<InstrumentType, string> = {
   CDB: 'CDB',

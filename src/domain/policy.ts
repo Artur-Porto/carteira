@@ -1,6 +1,6 @@
 // Initial investment policy (SPEC, "Política de investimento inicial"). Every number here is
 // a default the owner can edit on the Política screen.
-import type { AssetClass, Band, Bucket, Cents, IsoDateTime, Policy, Scenario, ScenarioClass } from './types';
+import { ASSET_CLASSES, type AssetClass, type Band, type Bucket, type Cents, type IsoDateTime, type Policy, type Scenario, type ScenarioClass } from './types';
 
 export const ASSET_CLASS_LABELS: Record<AssetClass, string> = {
   rfPosFixada: 'Renda fixa pós-fixada',
@@ -37,10 +37,25 @@ export function bandFor(target: number): Band {
   return { min: (t - half) / 100, max: (t + half) / 100 };
 }
 
-function bandsFor(targets: Record<AssetClass, number>): Record<AssetClass, Band> {
+/** The bands always follow the targets, so a policy is saved with bands recomputed here. */
+export function bandsFor(targets: Record<AssetClass, number>): Record<AssetClass, Band> {
   const entries = Object.entries(targets).map(([cls, target]) => [cls, bandFor(target)]);
   return Object.fromEntries(entries) as Record<AssetClass, Band>;
 }
+
+/** SPEC, "Carteira livre": the medium term, 2 to 5 years, and the long term. */
+export const TERM_OF_CLASS: Record<AssetClass, 'medio' | 'longo'> = {
+  rfPosFixada: 'medio',
+  rfIpcaCurta: 'medio',
+  rfPrefixada: 'medio',
+  rfIpcaLonga: 'longo',
+  acoesBrasil: 'longo',
+  fiis: 'longo',
+  exterior: 'longo',
+  cripto: 'longo',
+};
+
+export const MEDIUM_TERM_CLASSES: readonly AssetClass[] = ASSET_CLASSES.filter(cls => TERM_OF_CLASS[cls] === 'medio');
 
 const shocks = (values: number[]): Record<ScenarioClass, number> => {
   const [rfPosFixada, rfIpcaCurta, rfPrefixada, rfIpcaLonga, acoesBrasil, fiis, exterior, cripto, creditoPrivado] = values as [
@@ -64,6 +79,42 @@ export const INITIAL_SCENARIOS: Scenario[] = [
  * formula and migrates saved policies that still hold the old 5%.
  */
 export const SINGLE_STOCK_MAX_PCT = 2.86;
+
+export type PolicyField = 'months' | 'monthlyCost' | 'minCdi' | 'targets' | AssetClass | 'criptoMaxPct' | 'issuerFgcPct' | 'singleFiiMaxPctOfClass' | 'maxDrawdown';
+
+const twoDecimals = (value: number) => Math.abs(value * 100 - Math.round(value * 100)) < 1e-9;
+const pctText = (value: number) => `${value.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`;
+
+/**
+ * What stops a policy from being saved (SPEC, "Validação": targets that do not add up to 100% and
+ * changes that break the limits are refused). Empty when the policy is valid.
+ */
+export function policyErrors(p: Pick<Policy, 'reserve' | 'targets' | 'limits' | 'maxDrawdown'>): Partial<Record<PolicyField, string>> {
+  const errors: Partial<Record<PolicyField, string>> = {};
+  const { months, monthlyCostCents, minCdiPct } = p.reserve;
+  if (!Number.isInteger(months) || months < 0 || months > 60) errors.months = 'Use um número inteiro de meses, de 0 a 60.';
+  if (!Number.isSafeInteger(monthlyCostCents) || monthlyCostCents < 0) errors.monthlyCost = 'Informe o custo de vida mensal, como 6.000,00.';
+  if (!(minCdiPct >= 1 && minCdiPct <= 200) || !twoDecimals(minCdiPct)) errors.minCdi = 'Use um percentual do CDI de 1% a 200%.';
+  for (const cls of ASSET_CLASSES) {
+    const target = p.targets[cls];
+    if (!(target >= 0 && target <= 100) || !twoDecimals(target)) errors[cls] = 'Use um percentual de 0 a 100, com até duas casas.';
+  }
+  const sum = ASSET_CLASSES.reduce((total, cls) => total + Math.round(p.targets[cls] * 100), 0);
+  if (sum !== 10_000) errors.targets = `Os alvos somam ${pctText(sum / 100)} e precisam somar 100%.`;
+  const limits: [PolicyField, number, number][] = [
+    ['criptoMaxPct', p.limits.criptoMaxPct, 0],
+    ['issuerFgcPct', p.limits.issuerFgcPct, 1],
+    ['singleFiiMaxPctOfClass', p.limits.singleFiiMaxPctOfClass, 1],
+    ['maxDrawdown', p.maxDrawdown, 1],
+  ];
+  for (const [field, value, min] of limits) {
+    if (!(value >= min && value <= 100) || !twoDecimals(value)) errors[field] = `Use um percentual de ${min} a 100, com até duas casas.`;
+  }
+  if (!errors.cripto && !errors.criptoMaxPct && p.targets.cripto > p.limits.criptoMaxPct) {
+    errors.cripto = `O alvo passa do teto de cripto, de ${pctText(p.limits.criptoMaxPct)} da carteira livre.`;
+  }
+  return errors;
+}
 
 export function initialPolicy(now: IsoDateTime, monthlyCostCents: Cents = 0): Policy {
   return {

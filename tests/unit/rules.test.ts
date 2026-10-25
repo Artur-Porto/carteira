@@ -48,10 +48,11 @@ describe('fixed income tax tables', () => {
     expect(fixedIncomeTax('CDB', -500, 15)).toEqual({ iofCents: 0, irCents: 0 });
   });
 
-  it('records when and where every rule was checked', () => {
+  it('records when and where every rule was checked, in an official source', () => {
     for (const rule of TAX_RULES) {
       expect(rule.verifiedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-      expect(rule.source.url).toMatch(/^https:\/\/www\.planalto\.gov\.br\//);
+      // Planalto for laws and decrees; the FGC publishes its own regulation, approved by the CMN.
+      expect(rule.source.url).toMatch(/^https:\/\/www\.(planalto\.gov\.br|fgc\.org\.br)\//);
     }
   });
 });

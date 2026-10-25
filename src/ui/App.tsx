@@ -6,12 +6,14 @@ import { BackIcon, ChecklistIcon, EyeIcon, HomeIcon, MoreIcon, PlusIcon, WalletI
 import { Planned } from './components/Planned';
 import { DiscreetContext } from './discreet';
 import { describe, goBack, hrefFor, useScreen, type Route, type Screen } from './routes';
+import { Contribution } from './screens/Contribution';
 import { Home } from './screens/Home';
 import { More } from './screens/More';
 import { MovementForm } from './screens/MovementForm';
 import { Onboarding } from './screens/Onboarding';
 import { Pension } from './screens/Pension';
 import { PensionBalanceForm, PensionPlanForm } from './screens/PensionForms';
+import { PolicyScreen } from './screens/PolicyScreen';
 import { Portfolio } from './screens/Portfolio';
 import { PositionDetail } from './screens/PositionDetail';
 import { PositionForm } from './screens/PositionForm';
@@ -59,12 +61,7 @@ function render(screen: Screen): ReactNode {
     case 'roteiro':
       return <Onboarding step={screen.step} />;
     case 'aporte':
-      return (
-        <Planned milestone="3">
-          Informe o valor do aporte e veja para onde vai cada parte, com o motivo, a checagem dos limites e a lista do
-          que executar na corretora.
-        </Planned>
-      );
+      return <Contribution />;
     case 'revisao':
       return (
         <Planned milestone="4 e 7">
@@ -73,12 +70,7 @@ function render(screen: Screen): ReactNode {
         </Planned>
       );
     case 'politica':
-      return (
-        <Planned milestone="3, 7 e 8">
-          Meta da reserva, alvos e faixas, limites, choques dos cenários, termômetro de taxas, parâmetros fiscais,
-          orçamento de risco, critérios da nota do ativo e limites dos freios.
-        </Planned>
-      );
+      return <PolicyScreen />;
     case 'cenarios':
       return (
         <Planned milestone="4 e 9">

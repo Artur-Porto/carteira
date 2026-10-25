@@ -14,6 +14,7 @@ export interface TaxRule<T> {
 
 const LEI_11033 = 'https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2004/lei/l11033.htm';
 const DECRETO_6306 = 'https://www.planalto.gov.br/ccivil_03/_ato2007-2010/2007/decreto/d6306.htm';
+const REGULAMENTO_FGC = 'https://www.fgc.org.br/documents/d/asset-library-52554/regulamento-fgc_20260603';
 
 /** Income tax on fixed income by holding period, in calendar days from application to redemption. */
 export const FIXED_INCOME_IR: TaxRule<{ upToDays: number | null; ratePct: string }[]> = {
@@ -57,7 +58,19 @@ export const IOF_ZERO: TaxRule<readonly InstrumentType[]> = {
   source: { title: 'Decreto 6.306/2007, art. 32, § 2º, inciso V', url: DECRETO_6306 },
 };
 
-export const TAX_RULES = [FIXED_INCOME_IR, IOF_FIXED_INCOME, IR_EXEMPT, IOF_ZERO] as const;
+/**
+ * The FGC guarantee per person, summing every institution of the same conglomerate, and the
+ * instruments of the app it covers. Tesouro Direto bonds are not covered.
+ */
+export const FGC_GUARANTEE: TaxRule<{ perConglomerateCents: Cents; instruments: readonly InstrumentType[] }> = {
+  id: 'fgc',
+  label: 'FGC: até R$ 250 mil por CPF e por conglomerado financeiro, em CDB, RDB, LCI e LCA; teto de R$ 1 milhão a cada 4 anos',
+  value: { perConglomerateCents: 25_000_000, instruments: ['CDB', 'RDB', 'LCI', 'LCA'] },
+  verifiedAt: '2026-10-25',
+  source: { title: 'Regulamento do FGC, anexo II da Resolução CMN 4.222/2013, art. 2º, versão de 03/06/2026', url: REGULAMENTO_FGC },
+};
+
+export const TAX_RULES = [FIXED_INCOME_IR, IOF_FIXED_INCOME, IR_EXEMPT, IOF_ZERO, FGC_GUARANTEE] as const;
 
 /** Income tax rate, in percent, for fixed income held `days` calendar days. */
 export function fixedIncomeIrPct(days: number): Dec {
