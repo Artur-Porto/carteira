@@ -15,6 +15,8 @@ export interface TaxRule<T> {
 const LEI_11033 = 'https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2004/lei/l11033.htm';
 const DECRETO_6306 = 'https://www.planalto.gov.br/ccivil_03/_ato2007-2010/2007/decreto/d6306.htm';
 const REGULAMENTO_FGC = 'https://www.fgc.org.br/documents/d/asset-library-52554/regulamento-fgc_20260603';
+const LEI_8668 = 'https://www.planalto.gov.br/ccivil_03/leis/l8668.htm';
+const LEI_9250 = 'https://www.planalto.gov.br/ccivil_03/leis/l9250.htm';
 
 /** Income tax on fixed income by holding period, in calendar days from application to redemption. */
 export const FIXED_INCOME_IR: TaxRule<{ upToDays: number | null; ratePct: string }[]> = {
@@ -70,7 +72,102 @@ export const FGC_GUARANTEE: TaxRule<{ perConglomerateCents: Cents; instruments: 
   source: { title: 'Regulamento do FGC, anexo II da Resolução CMN 4.222/2013, art. 2º, versão de 03/06/2026', url: REGULAMENTO_FGC },
 };
 
-export const TAX_RULES = [FIXED_INCOME_IR, IOF_FIXED_INCOME, IR_EXEMPT, IOF_ZERO, FGC_GUARANTEE] as const;
+/** Stocks on the exchange: 15% of the gain, exempt when the month's stock sales stay within R$ 20 mil. */
+export const STOCK_GAIN: TaxRule<{ ratePct: string; monthlyExemptSalesCents: Cents }> = {
+  id: 'ir-acoes',
+  label: 'Ações em bolsa: 15% sobre o ganho; isento se as vendas de ações do mês somarem até R$ 20 mil',
+  value: { ratePct: '15', monthlyExemptSalesCents: 2_000_000 },
+  verifiedAt: '2026-10-25',
+  source: { title: 'Lei 11.033/2004, art. 2º, II, e art. 3º, I (a MP 1.303/2025 perdeu a vigência)', url: LEI_11033 },
+};
+
+/** ETFs and BDRs on the exchange: 15% of the gain. The R$ 20 mil exemption covers stocks only. */
+export const ETF_BDR_GAIN: TaxRule<{ ratePct: string }> = {
+  id: 'ir-etf-bdr',
+  label: 'ETFs e BDRs em bolsa: 15% sobre o ganho, sem a isenção das ações',
+  value: { ratePct: '15' },
+  verifiedAt: '2026-10-25',
+  source: { title: 'Lei 11.033/2004, art. 2º, II; a isenção do art. 3º, I, vale só para ações', url: LEI_11033 },
+};
+
+export const FII_GAIN: TaxRule<{ ratePct: string }> = {
+  id: 'ir-fii',
+  label: 'FIIs: 20% sobre o ganho na venda das cotas',
+  value: { ratePct: '20' },
+  verifiedAt: '2026-10-25',
+  source: { title: 'Lei 8.668/1993, art. 18', url: LEI_8668 },
+};
+
+/**
+ * Crypto: exempt when the month's sales stay within R$ 35 mil, all crypto added together, the
+ * conservative reading; above it, the whole gain pays by bracket.
+ */
+export const CRYPTO_GAIN: TaxRule<{ monthlyExemptSalesCents: Cents; brackets: { upToCents: Cents | null; ratePct: string }[] }> = {
+  id: 'ir-cripto',
+  label: 'Cripto: isento se as vendas do mês somarem até R$ 35 mil; acima disso, 15% a 22,5% do ganho, por faixa',
+  value: {
+    monthlyExemptSalesCents: 3_500_000,
+    brackets: [
+      { upToCents: 500_000_000, ratePct: '15' },
+      { upToCents: 1_000_000_000, ratePct: '17.5' },
+      { upToCents: 3_000_000_000, ratePct: '20' },
+      { upToCents: null, ratePct: '22.5' },
+    ],
+  },
+  verifiedAt: '2026-10-25',
+  source: { title: 'Lei 9.250/1995, art. 22, II, e Lei 8.981/1995, art. 21, na redação da Lei 13.259/2016', url: LEI_9250 },
+};
+
+export const TAX_RULES = [FIXED_INCOME_IR, IOF_FIXED_INCOME, IR_EXEMPT, IOF_ZERO, FGC_GUARANTEE, STOCK_GAIN, ETF_BDR_GAIN, FII_GAIN, CRYPTO_GAIN] as const;
+
+/** Where a sale's income tax comes from; fixed income has its own table above. */
+export const MARKET_GAIN_KINDS = ['acao', 'etf', 'fii', 'cripto'] as const;
+export type MarketTaxKind = (typeof MARKET_GAIN_KINDS)[number];
+
+export function marketTaxKind(instrument: InstrumentType): MarketTaxKind | null {
+  switch (instrument) {
+    case 'Acao':
+      return 'acao';
+    case 'ETF':
+    case 'BDR':
+      return 'etf';
+    case 'FII':
+      return 'fii';
+    case 'Cripto':
+      return 'cripto';
+    default:
+      return null;
+  }
+}
+
+/**
+ * Estimated income tax on the month's gain of one kind of asset, given the month's total sales of
+ * that kind. Losses pay nothing, and the app does not carry them to later months: an estimate.
+ */
+export function marketGainTax(kind: MarketTaxKind, gainCents: Cents, monthSalesCents: Cents): Cents {
+  if (gainCents <= 0) return 0;
+  const at = (pct: string) => scaleCents(gainCents, dec(pct).div(100));
+  switch (kind) {
+    case 'acao':
+      return monthSalesCents <= STOCK_GAIN.value.monthlyExemptSalesCents ? 0 : at(STOCK_GAIN.value.ratePct);
+    case 'etf':
+      return at(ETF_BDR_GAIN.value.ratePct);
+    case 'fii':
+      return at(FII_GAIN.value.ratePct);
+    case 'cripto': {
+      if (monthSalesCents <= CRYPTO_GAIN.value.monthlyExemptSalesCents) return 0;
+      let tax = new Dec(0);
+      let floor = 0;
+      for (const { upToCents, ratePct } of CRYPTO_GAIN.value.brackets) {
+        const top = upToCents === null ? gainCents : Math.min(gainCents, upToCents);
+        if (top > floor) tax = tax.plus(new Dec(top - floor).mul(dec(ratePct)).div(100));
+        if (upToCents === null || gainCents <= upToCents) break;
+        floor = upToCents;
+      }
+      return tax.toDecimalPlaces(0, Dec.ROUND_HALF_UP).toNumber();
+    }
+  }
+}
 
 /** Income tax rate, in percent, for fixed income held `days` calendar days. */
 export function fixedIncomeIrPct(days: number): Dec {

@@ -15,6 +15,7 @@ import { INSTRUMENT_LABELS, ISSUE_TEXTS, TRANSACTION_LABELS } from '../labels';
 import { usePortfolio } from '../hooks';
 import { gainPct, positionDetails } from '../positionText';
 import { goBack, hrefFor, positionHref } from '../routes';
+import { SaleIntentCard, ThesisCard } from './PositionDisciplines';
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -239,6 +240,11 @@ export function PositionDetail({ id }: { id: string }) {
           </ul>
         </section>
       )}
+
+      {v.family === 'market' && (
+        <ThesisCard key={p.theses.find(t => t.positionId === id)?.updatedAt ?? 'nova'} position={position} thesis={p.theses.find(t => t.positionId === id)} today={p.today} />
+      )}
+      {v.family === 'market' && v.open && <SaleIntentCard position={position} logs={p.decisionLogs} today={p.today} now={new Date()} />}
 
       <section className="card" aria-labelledby="delete-title">
         <h2 id="delete-title">Excluir</h2>

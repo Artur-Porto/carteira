@@ -38,6 +38,13 @@ test('the contribution goes to the reserve and to the largest shortfalls, and be
     await p.getByLabel('Valor pago, sem os custos').fill('2.000,00');
   });
 
+  // The thermometer (milestone 4) follows the day's rates; off, the targets are the policy's.
+  await openTab(page, 'Mais', 'Mais');
+  await page.getByRole('link', { name: /^Política/ }).click();
+  await page.getByLabel('Usar o termômetro nos alvos').uncheck();
+  await page.getByRole('button', { name: 'Salvar política' }).click();
+  await expect(page.getByRole('status')).toHaveText('Política salva.');
+
   await openTab(page, 'Aporte', 'Aporte do mês');
   await page.getByLabel('Valor do aporte').fill('2.000,00');
   // The reserve covers 8 of 12 months, between half and the goal: 50%. The other R$ 1.000,00

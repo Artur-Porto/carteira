@@ -86,13 +86,15 @@ export function splitAmongClasses(
   byClass: Record<AssetClass, Cents>,
   targets: Record<AssetClass, number>,
   criptoMaxPct: number,
+  /** Classes that get nothing, such as the one that weighs most in a scenario past the tolerance. */
+  excluded: readonly AssetClass[] = [],
 ): ClassPart[] {
   if (freeCents <= 0) return [];
   const after = BigInt(ASSET_CLASSES.reduce((sum, cls) => sum + byClass[cls], 0) + freeCents);
   // In ten-thousandths of a centavo, so targets with two decimals stay exact.
   const shortfallOf = (cls: AssetClass) => after * hundredths(targets[cls]) - 10_000n * BigInt(byClass[cls]);
   const chosen = ASSET_CLASSES.map(cls => ({ cls, shortfall: shortfallOf(cls) }))
-    .filter(c => c.shortfall > 0n)
+    .filter(c => c.shortfall > 0n && !excluded.includes(c.cls))
     .sort((a, b) => desc(a.shortfall, b.shortfall))
     .slice(0, MAX_CLASSES);
   const criptoRoom = after * hundredths(criptoMaxPct) - 10_000n * BigInt(byClass.cripto);

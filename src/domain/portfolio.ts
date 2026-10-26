@@ -69,11 +69,14 @@ export function valuePortfolio({ positions, transactions, reconciliations, pensi
       add(byClass[p.assetClass], v);
     }
   }
-  const pensionCents = pensionPlans.reduce((total, plan) => {
-    const b = latestBalance(plan);
-    return total + (b ? b.ownCents + b.companyCents : 0);
-  }, 0);
+  const pensionCents = pensionPlans.reduce((total, plan) => total + latestPensionCents(plan), 0);
   return { valuations, reserve, free, byClass, pensionCents, unpricedCount };
+}
+
+/** A plan's latest balance, own plus company parts. */
+export function latestPensionCents(plan: Pick<PensionPlan, 'balances'>): Cents {
+  const b = latestBalance(plan);
+  return b ? b.ownCents + b.companyCents : 0;
 }
 
 /** Gross value of each class of the free portfolio: the basis of the allocation against the policy. */

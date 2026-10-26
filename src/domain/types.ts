@@ -138,6 +138,11 @@ export interface Policy extends Timestamps {
   scenarios: Scenario[];
   tiltEnabled: boolean;
   maxDrawdown: number;
+  /**
+   * The contribution planned for each month, which says how long the contributions take to bring
+   * a class back into its band. Optional: policies saved before milestone 4 do not have it.
+   */
+  monthlyContributionCents?: Cents;
 }
 
 export interface Institution extends Entity {
@@ -237,6 +242,11 @@ export interface DecisionLog extends Entity {
   reason: string;
   wouldChangeIf: string;
   relatedIds: string[];
+  /**
+   * A sale outside the plan waits 72 hours from `createdAt` (SPEC, "Rebalanceamento"). The entry
+   * is the intention, about the position in `relatedIds`, and this is how it ended.
+   */
+  saleIntent?: { outcome: 'pendente' | 'vendeu' | 'desistiu' };
 }
 
 export interface Thesis extends Entity {

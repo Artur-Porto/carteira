@@ -29,11 +29,13 @@ export const INITIAL_TARGETS: Record<AssetClass, number> = {
   cripto: 3,
 };
 
-/** 5/25 rule: the target plus or minus the smaller of 5 points and 25% of the target. */
+/**
+ * 5/25 rule: the target plus or minus the smaller of 5 points and 25% of the target. The half
+ * width is rounded down to a hundredth of a point, so a band never has more than two decimals.
+ */
 export function bandFor(target: number): Band {
-  // Hundredths of a point keep the usual targets exact.
   const t = Math.round(target * 100);
-  const half = Math.min(500, t / 4);
+  const half = Math.min(500, Math.floor(t / 4));
   return { min: (t - half) / 100, max: (t + half) / 100 };
 }
 

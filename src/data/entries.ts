@@ -4,6 +4,7 @@ import { bandsFor, initialPolicy } from '../domain/policy';
 import type {
   Cents,
   ContributionPlan,
+  DecisionLog,
   Entity,
   Institution,
   PensionBalance,
@@ -11,6 +12,7 @@ import type {
   Policy,
   Position,
   Reconciliation,
+  Thesis,
   Transaction,
 } from '../domain/types';
 import type { CarteiraDb } from './db';
@@ -153,6 +155,52 @@ export async function setContributionPlanStatus(db: CarteiraDb, id: string, stat
 
 export async function deleteContributionPlan(db: CarteiraDb, id: string): Promise<void> {
   await db.contributionPlans.delete(id);
+}
+
+/** A diary entry (SPEC, "Formato de uma sugestão": the date, the reason and what would change it). */
+export async function saveDecisionLog(db: CarteiraDb, draft: Draft<DecisionLog>): Promise<string> {
+  const now = new Date().toISOString();
+  return db.transaction('rw', db.decisionLogs, async () => {
+    const existing = draft.id ? await db.decisionLogs.get(draft.id) : undefined;
+    const log = stamped<DecisionLog>(draft, existing, now);
+    await db.decisionLogs.put(log);
+    return log.id;
+  });
+}
+
+export async function deleteDecisionLog(db: CarteiraDb, id: string): Promise<void> {
+  await db.decisionLogs.delete(id);
+}
+
+export async function setSaleIntentOutcome(db: CarteiraDb, id: string, outcome: NonNullable<DecisionLog['saleIntent']>['outcome']): Promise<void> {
+  await db.decisionLogs.update(id, { saleIntent: { outcome }, updatedAt: new Date().toISOString() });
+}
+
+/** A sale registered for a position closes its pending sale intentions. */
+export async function closeSaleIntents(db: CarteiraDb, positionId: string): Promise<void> {
+  const now = new Date().toISOString();
+  await db.transaction('rw', db.decisionLogs, async () => {
+    const pending = await db.decisionLogs.filter(d => d.saleIntent?.outcome === 'pendente' && d.relatedIds.includes(positionId)).toArray();
+    for (const d of pending) await db.decisionLogs.update(d.id, { saleIntent: { outcome: 'vendeu' }, updatedAt: now });
+  });
+}
+
+/** One thesis per position (SPEC: each variable-income asset keeps its thesis). */
+export async function saveThesis(db: CarteiraDb, draft: Omit<Draft<Thesis>, 'id'>): Promise<void> {
+  const now = new Date().toISOString();
+  await db.transaction('rw', db.theses, async () => {
+    const existing = await db.theses.where('positionId').equals(draft.positionId).first();
+    await db.theses.put(stamped<Thesis>({ ...draft, id: existing?.id }, existing, now));
+  });
+}
+
+export async function deleteThesis(db: CarteiraDb, id: string): Promise<void> {
+  await db.theses.delete(id);
+}
+
+/** Banks of the same group add up in the FGC limit. */
+export async function setConglomerate(db: CarteiraDb, institutionId: string, conglomerate: string): Promise<void> {
+  await db.institutions.update(institutionId, { conglomerate: conglomerate.trim().replace(/\s+/g, ' '), updatedAt: new Date().toISOString() });
 }
 
 /** The monthly living cost behind the reserve target; creates the initial policy if needed. */

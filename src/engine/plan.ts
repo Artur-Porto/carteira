@@ -40,6 +40,11 @@ export interface ContributionSuggestion {
   worstOk: boolean;
   /** Conglomerates at or above the policy's share of the FGC guarantee. */
   issuersAtLimit: IssuerExposure[];
+  /**
+   * With the worst scenario already past the tolerance, the class that weighs most in it gets no
+   * money (SPEC: reduce it, first through the contributions).
+   */
+  excluded: AssetClass | null;
 }
 
 export function planContribution(input: ContributionInput): ContributionSuggestion {
@@ -49,11 +54,14 @@ export function planContribution(input: ContributionInput): ContributionSuggesti
   const freeCents = amountCents - reserve.amountCents;
 
   const beforeByClass = grossByClass(value);
-  const parts = splitAmongClasses(freeCents, beforeByClass, policy.targets, policy.limits.criptoMaxPct);
+  const before = allocation(beforeByClass, policy.targets, policy.bands);
+  const worstBefore = value.free.grossCents > 0 ? worstScenario(scenarioResults(weightsOf(before), policy.scenarios)) : undefined;
+  const heaviest = worstBefore && !withinTolerance(worstBefore, policy.maxDrawdown) ? worstBefore.heaviest : null;
+  const excluded = heaviest && heaviest !== 'creditoPrivado' ? heaviest : null;
+  const parts = splitAmongClasses(freeCents, beforeByClass, policy.targets, policy.limits.criptoMaxPct, excluded ? [excluded] : []);
   const afterByClass = { ...beforeByClass };
   for (const part of parts) afterByClass[part.assetClass] += part.amountCents;
 
-  const before = allocation(beforeByClass, policy.targets, policy.bands);
   const after = allocation(afterByClass, policy.targets, policy.bands);
   const row = (rows: AllocationRow[], cls: AssetClass) => rows.find(r => r.assetClass === cls)!;
   const holdings = { positions: input.positions, valuations: value.valuations, institutions: input.institutions, policy, today: input.today };
@@ -66,8 +74,7 @@ export function planContribution(input: ContributionInput): ContributionSuggesti
   }));
 
   const freeAfter = ASSET_CLASSES.reduce((sum, cls) => sum + afterByClass[cls], 0);
-  const weights = Object.fromEntries(after.map(r => [r.assetClass, r.pct ?? ZERO]));
-  const worst = freeAfter > 0 ? worstScenario(scenarioResults(weights, policy.scenarios)) : undefined;
+  const worst = freeAfter > 0 ? worstScenario(scenarioResults(weightsOf(after), policy.scenarios)) : undefined;
   return {
     amountCents,
     reserve,
@@ -78,5 +85,8 @@ export function planContribution(input: ContributionInput): ContributionSuggesti
     worst,
     worstOk: worst ? withinTolerance(worst, policy.maxDrawdown) : true,
     issuersAtLimit: issuerExposures(holdings).filter(i => i.valueCents >= i.limitCents),
+    excluded,
   };
 }
+
+const weightsOf = (rows: readonly AllocationRow[]) => Object.fromEntries(rows.map(r => [r.assetClass, r.pct ?? ZERO]));

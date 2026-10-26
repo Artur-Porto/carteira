@@ -65,6 +65,7 @@ export const policySchema: z.ZodType<Policy> = z.strictObject({
   ),
   tiltEnabled: z.boolean(),
   maxDrawdown: z.number(),
+  monthlyContributionCents: cents.min(0).optional(),
   ...timestamps,
 });
 
@@ -142,6 +143,7 @@ export const decisionLogSchema: z.ZodType<DecisionLog> = z.strictObject({
   reason: text(2000),
   wouldChangeIf: text(2000),
   relatedIds: z.array(id),
+  saleIntent: z.strictObject({ outcome: z.enum(['pendente', 'vendeu', 'desistiu']) }).optional(),
   ...timestamps,
 });
 

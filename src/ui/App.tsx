@@ -19,6 +19,8 @@ import { PositionDetail } from './screens/PositionDetail';
 import { PositionForm } from './screens/PositionForm';
 import { ReconcileForm } from './screens/ReconcileForm';
 import { Reserve } from './screens/Reserve';
+import { Review } from './screens/Review';
+import { Scenarios } from './screens/Scenarios';
 import { Settings } from './screens/Settings';
 import { Welcome } from './screens/Welcome';
 
@@ -63,21 +65,11 @@ function render(screen: Screen): ReactNode {
     case 'aporte':
       return <Contribution />;
     case 'revisao':
-      return (
-        <Planned milestone="4 e 7">
-          Checklist do mês, diário de decisões com as revisões pendentes, tese de cada ativo de renda variável e boletim de
-          disciplina.
-        </Planned>
-      );
+      return <Review />;
     case 'politica':
       return <PolicyScreen />;
     case 'cenarios':
-      return (
-        <Planned milestone="4 e 9">
-          Perda da carteira em cada cenário, em reais e em percentual, a classe que mais pesa e o teste histórico da
-          política.
-        </Planned>
-      );
+      return <Scenarios />;
     case 'mesa':
       return (
         <Planned milestone="7, 8 e 9">

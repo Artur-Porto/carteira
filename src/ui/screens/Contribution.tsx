@@ -1,15 +1,16 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState, type ReactNode } from 'react';
-import { deleteContributionPlan, saveContributionPlan, setContributionPlanStatus } from '../../data/entries';
+import { deleteContributionPlan, saveContributionPlan, saveDecisionLog, setContributionPlanStatus } from '../../data/entries';
 import { db } from '../../data/instance';
-import { ASSET_CLASS_LABELS, initialPolicy } from '../../domain/policy';
-import { reserveMonths } from '../../domain/portfolio';
+import { ASSET_CLASS_LABELS } from '../../domain/policy';
+import { grossByClass, reserveMonths } from '../../domain/portfolio';
 import type { Cents, ContributionPlan } from '../../domain/types';
 import { MIN_PARCEL_CENTS, type ReservePart } from '../../engine/contribution';
 import type { Hint } from '../../engine/hints';
 import { planContribution, type ContributionSuggestion, type PlannedClass } from '../../engine/plan';
+import { CORRECTION_MONTHS, rebalance, type ClassCorrection } from '../../engine/rebalance';
 import { ConfirmButton } from '../components/ConfirmButton';
-import { NumberField } from '../components/fields';
+import { NumberField, TextField } from '../components/fields';
 import { Money } from '../discreet';
 import { formatCents, formatDate, formatPct } from '../format';
 import { usePortfolio } from '../hooks';
@@ -149,6 +150,116 @@ function Checks({ s, maxDrawdown, criptoMaxPct }: { s: ContributionSuggestion; m
   );
 }
 
+const monthsText = (n: number) => `${n} ${n === 1 ? 'mês' : 'meses'}`;
+
+function Correction({ c, monthlyCents }: { c: ClassCorrection; monthlyCents: Cents }) {
+  const name = ASSET_CLASS_LABELS[c.assetClass];
+  const band = `${formatPct(c.band.min)} a ${formatPct(c.band.max)}`;
+  if (monthlyCents <= 0) return <>{`${name} está ${BAND_STATUS_LABELS[c.status]}, de ${band}.`}</>;
+  if (c.status === 'abaixo') {
+    return <>{`${name} está abaixo da faixa, de ${band}. Com o aporte mensal todo para ela, volta à faixa em ${monthsText(c.months!)}.`}</>;
+  }
+  if (c.months !== null && c.months <= CORRECTION_MONTHS) {
+    return <>{`${name} está acima da faixa, de ${band}. Com os aportes indo para as outras classes, volta à faixa em ${monthsText(c.months)}, sem venda.`}</>;
+  }
+  const slow = c.months === null ? 'Os aportes sozinhos não trazem a classe de volta' : `Os aportes sozinhos levariam ${monthsText(c.months)}`;
+  if (c.fixedIncome) {
+    return (
+      <>
+        {`${name} está acima da faixa, de ${band}. ${slow}. Renda fixa com vencimento não entra em sugestão de venda: resgatar antes deixaria cerca de `}
+        <Money cents={c.redeemCostCents ?? 0} /> em IR e IOF estimados.
+      </>
+    );
+  }
+  if (!c.sale) return <>{`${name} está acima da faixa, de ${band}. ${slow}, e nenhuma posição da classe tem preço para a venda.`}</>;
+  return (
+    <>
+      {`${name} está acima da faixa, de ${band}. ${slow}. Sugestão de venda: `}
+      <Money cents={c.sale.amountCents} />, para que {CORRECTION_MONTHS} meses de aportes terminem a correção.
+      <ul className="small">
+        {c.sale.chunks.map(ch => (
+          <li key={ch.positionId}>
+            {ch.name}: vender <Money cents={ch.amountCents} />, com {ch.gainCents >= 0 ? 'ganho' : 'perda'} de <Money cents={Math.abs(ch.gainCents)} />.
+          </li>
+        ))}
+        <li>
+          IR estimado: <Money cents={c.sale.taxCents} />.
+        </li>
+        {c.sale.monthSales.map(m => (
+          <li key={m.kind}>
+            Vendas de {m.kind === 'acao' ? 'ações' : 'cripto'} no mês, com esta: <Money cents={m.withSaleCents} />, para uma isenção de até{' '}
+            <Money cents={m.exemptCents} />.
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+function Corrections({ corrections, monthlyCents }: { corrections: ClassCorrection[]; monthlyCents: Cents }) {
+  return (
+    <section className="card" aria-labelledby="contribution-corrections-title">
+      <h2 id="contribution-corrections-title">Classes fora da faixa</h2>
+      <ul className="checks">
+        {corrections.map(c => (
+          <li key={c.assetClass}>
+            <span className="mark" aria-hidden="true">
+              !
+            </span>
+            <div>
+              <Correction c={c} monthlyCents={monthlyCents} />
+            </div>
+          </li>
+        ))}
+      </ul>
+      <p className="muted small">
+        {monthlyCents > 0 ? (
+          <>
+            Contas com o aporte mensal previsto de <Money cents={monthlyCents} />. A correção vem primeiro pelos aportes; a venda só aparece quando
+            eles levariam mais de {CORRECTION_MONTHS} meses.
+          </>
+        ) : (
+          <>
+            Informe o aporte mensal previsto na <a href={hrefFor('politica')}>Política</a> para ver em quantos meses os aportes corrigem cada classe.
+          </>
+        )}
+      </p>
+    </section>
+  );
+}
+
+function DiaryNote({ planId, today }: { planId: string; today: string }) {
+  const [reason, setReason] = useState('');
+  const [change, setChange] = useState('');
+  const [done, setDone] = useState(false);
+  if (done) {
+    return (
+      <p role="status" className="muted">
+        Anotado no diário.
+      </p>
+    );
+  }
+  return (
+    <form
+      className="card"
+      aria-labelledby="contribution-diary-title"
+      onSubmit={async e => {
+        e.preventDefault();
+        if (!reason.trim()) return;
+        await saveDecisionLog(db, { date: today, type: 'aporte', reason: reason.trim(), wouldChangeIf: change.trim(), relatedIds: [planId] });
+        setDone(true);
+      }}
+    >
+      <h2 id="contribution-diary-title">Anotar no diário</h2>
+      <TextField label="Por que este aporte" value={reason} onChange={setReason} maxLength={2000} />
+      <TextField label="O que faria você mudar de ideia" value={change} onChange={setChange} maxLength={2000} />
+      <button type="submit" className="button" disabled={!reason.trim()}>
+        Anotar no diário
+      </button>
+    </form>
+  );
+}
+
 function PlanHistory({ plans }: { plans: ContributionPlan[] }) {
   if (plans.length === 0) return null;
   return (
@@ -188,9 +299,21 @@ export function Contribution() {
   const plans = useLiveQuery(() => db.contributionPlans.orderBy('date').reverse().toArray());
   const [text, setText] = useState('');
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
   if (!p?.settings) return null;
 
-  const policy = p.policy ?? initialPolicy(p.settings.createdAt);
+  // The targets in use, with the thermometer when it is on.
+  const policy = p.activePolicy;
+  const corrections = rebalance({
+    byClass: grossByClass(p.value),
+    targets: policy.targets,
+    bands: policy.bands,
+    monthlyContributionCents: policy.monthlyContributionCents ?? 0,
+    positions: p.positions,
+    valuations: p.value.valuations,
+    transactions: p.transactions,
+    today: p.today,
+  });
   const amount = readCents(text);
   const valid = amount !== null && amount > 0;
   const needsCost = policy.reserve.months > 0 && policy.reserve.monthlyCostCents <= 0;
@@ -220,6 +343,8 @@ export function Contribution() {
         )}
       </section>
 
+      {corrections.length > 0 && <Corrections corrections={corrections} monthlyCents={policy.monthlyContributionCents ?? 0} />}
+
       {s && (
         <>
           <section className="card" aria-labelledby="contribution-plan-title">
@@ -242,6 +367,11 @@ export function Contribution() {
                 <ClassItem key={part.assetClass} part={part} index={index} />
               ))}
             </ul>
+            {s.excluded && (
+              <p className="notice">
+                {ASSET_CLASS_LABELS[s.excluded]} ficou de fora deste aporte: é a classe que mais pesa no pior cenário, que já passa da tolerância.
+              </p>
+            )}
             <p className="muted small">O app indica a classe, o tipo e o valor. A escolha do ativo e a ordem na corretora são suas.</p>
           </section>
 
@@ -252,7 +382,7 @@ export function Contribution() {
             className="button primary"
             disabled={savedAt === key}
             onClick={async () => {
-              await saveContributionPlan(db, {
+              const id = await saveContributionPlan(db, {
                 date: p.today,
                 amountCents: s.amountCents,
                 splits: [
@@ -262,6 +392,7 @@ export function Contribution() {
                 status: 'planned',
               });
               setSavedAt(key);
+              setSavedId(id);
             }}
           >
             {savedAt === key ? 'Plano salvo' : 'Salvar plano'}
@@ -269,6 +400,7 @@ export function Contribution() {
           <p className="muted small">
             Depois de executar, registre cada compra na Carteira e marque o plano como executado.
           </p>
+          {savedAt === key && savedId && <DiaryNote key={savedId} planId={savedId} today={p.today} />}
         </>
       )}
 

@@ -454,6 +454,10 @@ fieldset.group legend {
   gap: 10px;
 }
 
+.inline-fields.two {
+  grid-template-columns: 1fr auto;
+}
+
 .inline-fields .field {
   margin-bottom: 0;
 }

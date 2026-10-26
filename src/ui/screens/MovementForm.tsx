@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { deleteTransaction, saveTransaction } from '../../data/entries';
+import { closeSaleIntents, deleteTransaction, saveTransaction } from '../../data/entries';
 import { db } from '../../data/instance';
-import type { InstrumentFamily, IsoDate, Position, Transaction, TransactionType } from '../../domain/types';
+import type { DecisionLog, InstrumentFamily, IsoDate, Position, Transaction, TransactionType } from '../../domain/types';
+import { intentionReady } from '../../engine/alerts';
 import { instrumentFamily } from '../../domain/types';
 import type { Valuation } from '../../domain/valuation';
 import { ConfirmButton } from '../components/ConfirmButton';
@@ -29,7 +30,19 @@ function amountLabel(family: InstrumentFamily, type: TransactionType): string {
 
 const needsQuantity = (family: InstrumentFamily, type: TransactionType) => family !== 'amount' && (type === 'buy' || type === 'sell');
 
-function Editor({ position, existing, valuation, today }: { position: Position; existing: Transaction | undefined; valuation: Valuation | undefined; today: IsoDate }) {
+function Editor({
+  position,
+  existing,
+  valuation,
+  today,
+  logs,
+}: {
+  position: Position;
+  existing: Transaction | undefined;
+  valuation: Valuation | undefined;
+  today: IsoDate;
+  logs: readonly DecisionLog[];
+}) {
   const family = instrumentFamily(position.instrumentType);
   const [type, setType] = useState<TransactionType>(existing?.type ?? TYPES[family][0]!);
   const [date, setDate] = useState(existing?.date ?? today);
@@ -67,6 +80,7 @@ function Editor({ position, existing, valuation, today }: { position: Position; 
         feesCents: family === 'amount' ? 0 : feeCents!,
         note: note.trim(),
       });
+      if (type === 'sell' && !existing) await closeSaleIntents(db, position.id);
       goBack(back);
     } finally {
       setBusy(false);
@@ -110,6 +124,12 @@ function Editor({ position, existing, valuation, today }: { position: Position; 
       {family !== 'amount' && type !== 'income' && (
         <NumberField label="Custos da operação (opcional)" value={fees} onChange={setFees} placeholder="0,00" error={errors['fees']} />
       )}
+      {family === 'market' && type === 'sell' && !existing && !logs.some(d => d.relatedIds.includes(position.id) && intentionReady(d, new Date())) && (
+        <p className="notice">
+          Esta venda não passou pela espera de 72 horas. Se for fora do plano, anote a intenção na tela da posição e volte depois. Ela fica registrada mesmo
+          assim.
+        </p>
+      )}
       <TextField label="Nota (opcional)" value={note} onChange={setNote} maxLength={200} />
       <button type="submit" className="button primary" disabled={busy}>
         {existing ? 'Salvar' : 'Registrar'}
@@ -138,6 +158,13 @@ export function MovementForm({ positionId, transactionId }: { positionId: string
   const existing = transactionId ? p.transactions.find(t => t.id === transactionId) : undefined;
   if (!position || (transactionId && !existing)) return <p className="card">Esta movimentação não existe mais.</p>;
   return (
-    <Editor key={transactionId ?? 'nova'} position={position} existing={existing} valuation={p.value.valuations.get(positionId)} today={p.today} />
+    <Editor
+      key={transactionId ?? 'nova'}
+      position={position}
+      existing={existing}
+      valuation={p.value.valuations.get(positionId)}
+      today={p.today}
+      logs={p.decisionLogs}
+    />
   );
 }

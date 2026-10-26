@@ -1,6 +1,7 @@
-import { ASSET_CLASS_LABELS, initialPolicy } from '../../domain/policy';
 import { grossByClass, reserveMonths } from '../../domain/portfolio';
+import { alerts } from '../../engine/alerts';
 import { allocation } from '../../engine/allocation';
+import { AlertList } from '../components/Alerts';
 import { AllocationBars } from '../components/AllocationBars';
 import { Money } from '../discreet';
 import { formatDate, formatDateTime } from '../format';
@@ -25,10 +26,9 @@ export function Home() {
   const dates = sources.flatMap(s => (s.asOf ? [s.asOf] : [])).sort();
   const oldest = dates[0];
   const newest = dates.at(-1);
-  // Without a saved policy yet, the targets shown are the initial ones.
-  const shownPolicy = policy ?? initialPolicy(settings.createdAt);
-  const rows = allocation(grossByClass(value), shownPolicy.targets, shownPolicy.bands);
-  const outside = rows.filter(r => r.status && r.status !== 'dentro');
+  // The targets in use: the policy's, moved by the thermometer when it is on.
+  const rows = allocation(grossByClass(value), p.activePolicy.targets, p.activePolicy.bands);
+  const list = alerts({ ...p, policy: p.activePolicy, now: new Date() });
 
   return (
     <>
@@ -97,19 +97,19 @@ export function Home() {
         )}
       </section>
 
+      <section className="card" aria-labelledby="home-alerts-title">
+        <h2 id="home-alerts-title">Alertas</h2>
+        <AlertList alerts={list} />
+      </section>
+
       <section className="card" aria-labelledby="home-allocation-title">
         <h2 id="home-allocation-title">Alocação da carteira livre</h2>
         {value.free.grossCents > 0 ? (
           <>
-            {outside.length > 0 && (
-              <p>
-                {outside.length === 1 ? 'Uma classe está fora da faixa: ' : `${outside.length} classes estão fora da faixa: `}
-                {outside.map(r => ASSET_CLASS_LABELS[r.assetClass]).join(', ')}. O aporte do mês corrige primeiro os maiores déficits.
-              </p>
-            )}
             <AllocationBars rows={rows} />
             <p className="muted small">
-              A barra mostra a classe hoje, o traço marca o alvo e o trecho mais escuro, a faixa aceita.{' '}
+              A barra mostra a classe hoje, o traço marca o alvo e o trecho mais escuro, a faixa aceita.
+              {p.thermometer.applied && p.thermometer.tilts.some(t => t.shiftPct !== 0) && ' Os alvos já contam o termômetro de taxas.'}{' '}
               <a href={hrefFor('politica')}>Ver a política</a>
             </p>
           </>

@@ -1,7 +1,7 @@
 // Market data as the calculations use it, built from the public files of src/market/files.ts.
 // Any file may be missing, such as on a first launch offline; the valuation then falls back to
 // the cost and says why.
-import type { B3File, B3Item, CryptoFile, HolidaysFile, IndicesFile, TreasuryBond, TreasuryFile } from '../market/files';
+import type { B3File, B3Item, CryptoFile, HolidaysFile, IndicesFile, ThermometerFile, TreasuryBond, TreasuryFile } from '../market/files';
 import { BusinessCalendar, monthOf } from './calendar';
 import { Dec, ONE, dec } from './decimal';
 import type { IsoDate } from './types';
@@ -116,6 +116,8 @@ export interface MarketFiles {
   b3?: B3File;
   holidays?: HolidaysFile;
   crypto?: CryptoFile;
+  /** Read by the engine's thermometer, not by the valuation. */
+  thermometer?: ThermometerFile;
 }
 
 export const bondKey = (type: string, maturity: IsoDate) => `${type}|${maturity}`;

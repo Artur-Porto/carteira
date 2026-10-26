@@ -1,4 +1,4 @@
-import type { AssetClass, Indexer, InstrumentType, Liquidity, TaxRegime, TransactionType } from '../domain/types';
+import type { AssetClass, DecisionType, Indexer, InstrumentType, Liquidity, TaxRegime, TransactionType } from '../domain/types';
 import type { ValuationIssue } from '../domain/valuation';
 import type { BandStatus } from '../engine/allocation';
 
@@ -12,6 +12,15 @@ export const CLASS_TYPE_TEXTS: Record<AssetClass, string> = {
   fiis: 'Cotas de FIIs, sem que um fundo passe do limite dentro da classe.',
   exterior: 'ETF de índice amplo do exterior, listado na B3.',
   cripto: 'Cripto, dentro do teto da política.',
+};
+
+export const DECISION_LABELS: Record<DecisionType, string> = {
+  aporte: 'Aporte',
+  rebalanceamento: 'Rebalanceamento',
+  venda: 'Venda',
+  politica: 'Política',
+  revisao: 'Revisão do mês',
+  outro: 'Outro',
 };
 
 export const BAND_STATUS_LABELS: Record<BandStatus, string> = {
