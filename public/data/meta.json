@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-29T07:09:06.207Z",
+  "generatedAt": "2026-10-30T07:10:28.197Z",
   "sources": {
-    "indices": {"ok":true,"asOf":"2026-10-27","updatedAt":"2026-10-29T07:09:06.207Z"},
-    "treasury": {"ok":true,"asOf":"2026-10-27","updatedAt":"2026-10-29T07:09:06.207Z"},
-    "b3": {"ok":true,"asOf":"2026-10-28","updatedAt":"2026-10-29T07:09:06.207Z"},
-    "holidays": {"ok":true,"asOf":"2026-10-19","updatedAt":"2026-10-29T07:09:06.207Z"},
-    "crypto": {"ok":true,"asOf":"2026-10-29","updatedAt":"2026-10-29T07:09:06.207Z"}
+    "indices": {"ok":true,"asOf":"2026-10-28","updatedAt":"2026-10-30T07:10:28.197Z"},
+    "treasury": {"ok":true,"asOf":"2026-10-28","updatedAt":"2026-10-30T07:10:28.197Z"},
+    "b3": {"ok":true,"asOf":"2026-10-29","updatedAt":"2026-10-30T07:10:28.197Z"},
+    "holidays": {"ok":true,"asOf":"2026-10-19","updatedAt":"2026-10-30T07:10:28.197Z"},
+    "crypto": {"ok":true,"asOf":"2026-10-30","updatedAt":"2026-10-30T07:10:28.197Z"}
   }
 }
